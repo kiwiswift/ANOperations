@@ -1245,6 +1245,11 @@ final class ANOperationsTests: XCTestCase {
         ("testOperationDidStartWhenSetMaxConcurrencyCountOnTheQueue", testOperationDidStartWhenSetMaxConcurrencyCountOnTheQueue),
         ("testOperationFinishedWithErrors", testOperationFinishedWithErrors),
         ("testOperationCancelledWithErrors", testOperationCancelledWithErrors),
+        ("test_OutputOperation_FinishesSuccesful",test_OutputOperation_FinishesSuccesful),
+        ("test_OutputOperation_Failed",test_OutputOperation_Failed),
+        ("test_InputOutputOperation",test_InputOutputOperation),
+        ("test_InputOperation_BindsFailedOutputOperation",test_InputOperation_BindsFailedOutputOperation),
+        ("test_InputOperation_BindsSuccessfulOutputOperation",test_InputOperation_BindsSuccessfulOutputOperation),
     ]
     #endif
 }

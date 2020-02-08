@@ -9,13 +9,13 @@ public enum ValueState<T> {
     case pending
     case ready(T)
     
-    func get() -> T? {
+    public func get() -> T? {
         guard case let .ready(value) = self else { return nil }
         return value
     }
 }
 
-class InputOperation<Input>: ANOperation {
+open class InputOperation<Input>: ANOperation {
     
     typealias PassDataBlock = () throws -> Void
     
@@ -23,7 +23,7 @@ class InputOperation<Input>: ANOperation {
     
     var passDataBlock: PassDataBlock
     
-    required init<O>(outputOperation: O) where O: OutputOperation, O.Output == Input {
+    public init<O>(outputOperation: O) where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { }
         super.init()
         self.passDataBlock = { [weak self] in
@@ -45,10 +45,8 @@ class InputOperation<Input>: ANOperation {
     }
 }
 
-class InputOutputOperation<Input, Output>: InputOperation<Input>, OutputOperation {
+open class InputOutputOperation<Input, Output>: InputOperation<Input>, OutputOperation {
     
-    var outputValue: ValueState<Output> = .pending
-    
-    
+    public var outputValue: ValueState<Output> = .pending
     
 }
