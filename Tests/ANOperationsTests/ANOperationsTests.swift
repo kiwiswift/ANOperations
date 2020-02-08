@@ -1052,6 +1052,162 @@ final class ANOperationsTests: XCTestCase {
         XCTAssert(op.errors.count == 1)
         XCTAssertEqual((op.errors.first! as NSError).code, 1)
     }
+
+    
+    func test_OutputOperation_FinishesSuccesful() throws {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            
+            var outputValue: ValueState<String> = .pending
+            
+            override func execute() {
+                self.finish(with: "Finished")
+            }
+            
+        }
+        
+        let expect = expectation(description: "Output")
+        let operation = TestOutputOperation()
+        operation.addObserver(BlockObserver(finishHandler: { _, _ in
+            expect.fulfill()
+            XCTAssertEqual(try? operation.outputResult?.get(), "Finished")
+            XCTAssertEqual(operation.errors.count, 0)
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperation(operation)
+        
+        wait(for: [expect], timeout: 1)
+    }
+    
+    func test_OutputOperation_Failed() throws {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<String> = .pending
+            
+            override func execute() {
+                finishWithError(NSError(domain: "test-domain", code: 123, userInfo: nil) as Error)
+            }
+            
+        }
+        
+        let expect = expectation(description: "Output")
+        let operation = TestOutputOperation()
+        operation.addObserver(BlockObserver(finishHandler: { _, _ in
+            do {
+                _ = try operation.outputResult?.get()
+                XCTFail("Should throw")
+            } catch {
+                XCTAssertEqual((error as NSError).code, 123)
+                            XCTAssertEqual(operation.errors.count, 1)
+            }
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperation(operation)
+        
+        wait(for: [expect], timeout: 5)
+    }
+    
+    func test_InputOperation_BindsSuccessfulOutputOperation() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<String> = .pending
+            
+            override func execute() {
+                self.finish(with: "Finished")
+            }
+            
+        }
+        
+        class TestInputOperation: InputOperation<String> { }
+        
+        let expect = expectation(description: "Output")
+        let outputOperation = TestOutputOperation()
+        let inputOperation = TestInputOperation(outputOperation: outputOperation)
+        inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
+            XCTAssertEqual(inputOperation.inputValue.get(), "Finished")
+            XCTAssertEqual(outputOperation.errors.count, 0)
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperations([outputOperation, inputOperation], waitUntilFinished: false)
+        
+        wait(for: [expect], timeout: 5)
+    }
+    
+    func test_InputOperation_BindsFailedOutputOperation() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            
+            var outputValue: ValueState<String> = .pending
+            
+            override func execute() {
+                finishWithError(NSError(domain: "test-domain", code: 321, userInfo: nil) as Error)
+            }
+            
+        }
+        
+        class TestInputOperation: InputOperation<String> {
+            
+            override func execute() {
+                super.execute()
+            }
+            
+        }
+        
+        let expect = expectation(description: "Output")
+        let outputOperation = TestOutputOperation()
+        let inputOperation = TestInputOperation(outputOperation: outputOperation)
+        inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
+            XCTAssertEqual((inputOperation.errors.first as NSError?)?.code, 321)
+            XCTAssertEqual(outputOperation.errors.count, 1)
+            XCTAssertEqual(inputOperation.errors.count, 1)
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperations([outputOperation, inputOperation], waitUntilFinished: false)
+        
+        wait(for: [expect], timeout: 5)
+    }
+    
+    func test_InputOutputOperation() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<Int> = .pending
+            override func execute() {
+                self.finish(with: 199)
+            }
+        }
+        
+        class TestInputOutputOperation: InputOutputOperation<Int,String> {
+            override func execute() {
+                guard let intValue = self.inputValue.get() else {
+                    finish()
+                    return
+                }
+                self.finish(with: String(intValue))
+            }
+        }
+        
+        let expect = expectation(description: "Output")
+        let outputOperation = TestOutputOperation()
+        let inputOperation = TestInputOutputOperation(outputOperation: outputOperation)
+        inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
+            XCTAssertEqual(try? inputOperation.outputResult?.get(), "199")
+            XCTAssertEqual(outputOperation.errors.count, 0)
+            XCTAssertEqual(inputOperation.errors.count, 0)
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperations([outputOperation, inputOperation], waitUntilFinished: false)
+        
+        wait(for: [expect], timeout: 5)
+    }
     
     #if !canImport(ObjectiveC)
     static var allTests = [

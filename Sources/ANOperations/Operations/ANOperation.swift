@@ -188,7 +188,7 @@ open class ANOperation: Operation {
 
             if newValue {
                 for observer in observers {
-                    observer.operationDidCancel(self)
+                    (observer as? OperationCancelObserver)?.operationDidCancel(self)
                 }
             }
         }
@@ -232,9 +232,9 @@ open class ANOperation: Operation {
         conditions.append(condition)
     }
 
-    private(set) var observers: [OperationObserver] = []
+    private(set) var observers: [OperationObserverProtocol] = []
 
-    public func addObserver(_ observer: OperationObserver) {
+    public func addObserver(_ observer: OperationObserverProtocol) {
         assert(state < .executing, "Cannot modify observers after execution has begun.")
         observers.append(observer)
     }
@@ -254,16 +254,20 @@ open class ANOperation: Operation {
         if internalErrors.isEmpty && !isCancelled {
             state = .executing
             stateAccess.unlock()
-
-            for observer in observers {
-                observer.operationDidStart(self)
-            }
-
+            
+            self.operationDidStart()
+            
             execute()
         }
         else {
             finish()
             stateAccess.unlock()
+        }
+    }
+    
+    func operationDidStart() {
+        for observer in observers {
+            (observer as? OperationStartObserver)?.operationDidStart(self)
         }
     }
 
@@ -325,7 +329,7 @@ open class ANOperation: Operation {
 
     public final func produceOperation(_ operation: Operation) {
         for observer in observers {
-            observer.operation(self, didProduceOperation: operation)
+            (observer as? OperationProduceObserver)?.operation(self, didProduceOperation: operation)
         }
     }
 
@@ -367,7 +371,7 @@ open class ANOperation: Operation {
         finished(internalErrors)
 
         for observer in observers {
-            observer.operationDidFinish(self, errors: internalErrors)
+            (observer as? OperationFinishObserver)?.operationDidFinish(self, errors: internalErrors)
         }
 
         state = .finished
