@@ -1209,6 +1209,59 @@ final class ANOperationsTests: XCTestCase {
         wait(for: [expect], timeout: 5)
     }
     
+    func test_Operation_AddingPassingCondition() {
+        let expectation = self.expectation(description: "AddingCondition")
+        
+        let opQueue = ANOperationQueue()
+        
+        let op = ANBlockOperation {
+            expectation.fulfill()
+        }.addingCondition(TestCondition())
+        
+        opQueue.addOperation(op)
+        
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+    
+    func test_Operation_AddingFailingCondition() {
+        let opQueue = ANOperationQueue()
+        
+        let exp = expectation(description: "observer")
+        
+        let observer = TestObserver()
+        
+        observer.didEndBlock = {
+            XCTAssertEqual(observer.errors?.count, 1)
+            exp.fulfill()
+        }
+        
+        var condition = TestCondition()
+        
+        condition.conditionBlock = {
+            false
+        }
+        
+        let op = ANBlockOperation {
+            XCTFail("Should not have run the block operation")
+        }
+        .addingCondition(condition)
+        .addingObserver(observer)
+        
+        keyValueObservingExpectation(for: op, keyPath: "isCancelled") { op, _ in
+            if let op = op as? Foundation.Operation {
+                return op.isCancelled
+            }
+            
+            return false
+        }
+        
+        XCTAssertFalse(op.isCancelled, "Should not yet have cancelled the operation")
+
+        opQueue.addOperation(op)
+        
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+    
     #if !canImport(ObjectiveC)
     static var allTests = [
         ("testAddingMultipleDeps", testAddingMultipleDeps),

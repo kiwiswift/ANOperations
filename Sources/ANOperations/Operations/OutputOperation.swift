@@ -33,6 +33,24 @@ public extension OutputOperation {
     
 }
 
+public extension OutputOperation {
+    
+    func map<N>(_ transform: @escaping (Output) -> N) -> TransformOperation<Output, N> {
+        let transformOperation = TransformOperation<Output, N>(outputOperation: self, block: transform)
+        self.addDependency(transformOperation)
+        return transformOperation
+    }
+
+    func bind<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
+        let observer = BlockObserver { [weak self] (operation, errors) in
+            guard let strongSelf = self,
+                let outputOperation = operation as? O else { return }
+            strongSelf.outputValue = outputOperation.outputValue
+        }
+        self.addObserver(observer)
+    }
+}
+
 extension Result {
     
     init(_ value: Success, _ error: Failure?) {

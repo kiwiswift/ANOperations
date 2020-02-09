@@ -404,6 +404,20 @@ open class ANOperation: Operation {
     // swiftlint:enable unavailable_function
 }
 
+public extension ANOperation {
+    
+    func addingCondition(_ condition: OperationCondition) -> Self {
+        self.addCondition(condition)
+        return self
+    }
+    
+    func addingObserver(_ observer: OperationObserverProtocol) -> Self {
+        self.addObserver(observer)
+        return self
+    }
+    
+}
+
 private extension ANOperation {
     enum KeyPaths {
         static let state = "state"
