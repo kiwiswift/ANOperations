@@ -25,7 +25,7 @@ public extension OutputOperation {
         }
         return nil
     }
-
+    
     func finish(with value: Output) {
         self.outputValue = .ready(value)
         self.finish()
@@ -40,7 +40,7 @@ public extension OutputOperation {
         self.addDependency(transformOperation)
         return transformOperation
     }
-
+    
     func bind<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
         let observer = BlockObserver { [weak self] (operation, errors) in
             guard let strongSelf = self,
@@ -49,6 +49,23 @@ public extension OutputOperation {
         }
         self.addObserver(observer)
     }
+    
+    typealias BindBlock = (Result<Output, Error>) -> Void
+    
+    func binding<Input>(block: @escaping BindBlock) -> Self where Output == Input {
+        let observer = BlockObserver { [weak self] _, errors in
+            guard let strongSelf = self,
+                let result = strongSelf.outputResult else {
+                    let error = OperationError(.inputValueNotSet)
+                    block(Result.failure(error))
+                    return
+            }
+            block(result)
+        }
+        self.addObserver(observer)
+        return self
+    }
+    
 }
 
 extension Result {

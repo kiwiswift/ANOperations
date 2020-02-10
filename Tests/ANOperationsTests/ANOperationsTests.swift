@@ -1291,6 +1291,32 @@ final class ANOperationsTests: XCTestCase {
         wait(for: [expect], timeout: 5)
     }
     
+    func test_OutputOperation_BindingResult() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<Int> = .pending
+            override func execute() {
+                self.finish(with: 199)
+            }
+        }
+        
+        let expect = expectation(description: "Output")
+        
+        var resultContainer: Int? = nil
+        let outputOperation = TestOutputOperation()
+            .binding { value in
+                resultContainer = try! value.get()
+        }.addingObserver(BlockObserver(finishHandler: { _, _ in
+            XCTAssertEqual(resultContainer, 199)
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperation(outputOperation)
+        
+        wait(for: [expect], timeout: 5)
+    }
+    
     #if !canImport(ObjectiveC)
     static var allTests = [
         ("testAddingMultipleDeps", testAddingMultipleDeps),

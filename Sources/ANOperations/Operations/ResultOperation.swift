@@ -8,6 +8,7 @@
 open class ResultOperation<Input>: InputOperation<Input> {
     
     typealias BindBlock = (Result<Input, Error>) -> Void
+    
     var bindBlock: BindBlock
     
     init<O>(bindBlock: @escaping BindBlock, outputOperation: O) where O: OutputOperation, O.Output == Input {
@@ -26,4 +27,3 @@ open class ResultOperation<Input>: InputOperation<Input> {
     }
     
 }
-
