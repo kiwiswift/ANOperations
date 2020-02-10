@@ -36,11 +36,11 @@ public extension OutputOperation {
 public extension OutputOperation {
     
     func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
-        let resultOperation = ResultOperation<O> {
-            guard let outputValue = self.outputValue.get() else { fatalError() }
+        let resultOperation = ResultOperation<O> { [weak self] in
+            guard let outputValue = self?.outputValue.get() else { fatalError() }
             return transform(outputValue)
         }
-        self.addDependency(resultOperation)
+        resultOperation.addSource(self)
         return resultOperation
     }
     

@@ -1317,6 +1317,33 @@ final class ANOperationsTests: XCTestCase {
         wait(for: [expect], timeout: 5)
     }
     
+    func test_TransformingOperations() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<Int> = .pending
+            override func execute() {
+                self.finish(with: 199)
+            }
+        }
+        
+        let expect = expectation(description: "Transformation")
+        
+        var resultContainer: String?
+        let outputOperation = TestOutputOperation()
+            .map { String($0) }
+            .binding { resultContainer = try! $0.get() }
+            .addingObserver(BlockObserver(finishHandler: { _, _ in
+                XCTAssertEqual(resultContainer, "199")
+                expect.fulfill()
+            }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperation(outputOperation)
+        
+        wait(for: [expect], timeout: 5)
+        
+    }
+    
     #if !canImport(ObjectiveC)
     static var allTests = [
         ("testAddingMultipleDeps", testAddingMultipleDeps),

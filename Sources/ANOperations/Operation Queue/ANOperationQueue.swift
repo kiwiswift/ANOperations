@@ -107,9 +107,11 @@ open class ANOperationQueue: OperationQueue {
          Indicate to the operation that we've finished our extra work on it
          and it's now it a state where it can proceed with evaluating conditions,
          if appropriate.
+         We pass the operationQueue (self) as a parameter in case we want to add
+         an operation's dependencies to the queue (e.g. transformation operations such as 'map')
          */
         if let operation = operation as? ANOperation {
-            operation.didEnqueue()
+            operation.didEnqueue(in: self)
         }
     }
 

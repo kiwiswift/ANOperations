@@ -83,7 +83,7 @@ open class ANOperation: Operation {
      Indicates that the ANOperation can now begin to evaluate readiness conditions,
      if appropriate.
      */
-    open func didEnqueue() {
+    open func didEnqueue(in queue: ANOperationQueue) {
         stateAccess.lock()
         defer { stateAccess.unlock() }
         state = .pending
