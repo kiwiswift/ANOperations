@@ -1262,6 +1262,35 @@ final class ANOperationsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
     
+    func test_BindOperation() {
+        
+        class TestOutputOperation: ANOperation, OutputOperation {
+            var outputValue: ValueState<Int> = .pending
+            override func execute() {
+                self.finish(with: 199)
+            }
+        }
+        
+        let expect = expectation(description: "Output")
+        let outputOperation = TestOutputOperation()
+        
+        var resultContainer: Int? = nil
+        let resultOperation = ResultOperation(bindBlock: { value in
+            resultContainer = try! value.get()
+        }, outputOperation: outputOperation)
+        
+        resultOperation.addObserver(BlockObserver(finishHandler: { _, _ in
+            XCTAssertEqual(resultContainer, 199)
+            expect.fulfill()
+        }))
+        
+        let queue = ANOperationQueue()
+        queue.addOperations([outputOperation, resultOperation], waitUntilFinished: false)
+        
+        XCTAssertEqual(resultOperation.dependencies.count, 1)
+        wait(for: [expect], timeout: 5)
+    }
+    
     #if !canImport(ObjectiveC)
     static var allTests = [
         ("testAddingMultipleDeps", testAddingMultipleDeps),
@@ -1303,6 +1332,9 @@ final class ANOperationsTests: XCTestCase {
         ("test_InputOutputOperation",test_InputOutputOperation),
         ("test_InputOperation_BindsFailedOutputOperation",test_InputOperation_BindsFailedOutputOperation),
         ("test_InputOperation_BindsSuccessfulOutputOperation",test_InputOperation_BindsSuccessfulOutputOperation),
+        ("test_Operation_AddingPassingCondition", test_Operation_AddingPassingCondition),
+        ("test_Operation_AddingFailingCondition", test_Operation_AddingFailingCondition),
+        ("test_BindOperation", test_BindOperation)
     ]
     #endif
 }

@@ -44,9 +44,3 @@ open class InputOperation<Input>: ANOperation {
         }
     }
 }
-
-open class InputOutputOperation<Input, Output>: InputOperation<Input>, OutputOperation {
-    
-    public var outputValue: ValueState<Output> = .pending
-    
-}

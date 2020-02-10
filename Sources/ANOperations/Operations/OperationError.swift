@@ -13,7 +13,7 @@ public struct OperationError: Error {
         case negatedConditionFailed(notCondition: String)
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
         case reachabilityConditionFailed(host: URL)
-
+        case inputValueNotSet
         case timedOut(timeout: TimeInterval)
     }
 
