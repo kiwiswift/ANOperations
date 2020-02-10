@@ -1275,7 +1275,7 @@ final class ANOperationsTests: XCTestCase {
         let outputOperation = TestOutputOperation()
         
         var resultContainer: Int? = nil
-        let resultOperation = ResultOperation(bindBlock: { value in
+        let resultOperation = FinishOperation(bindBlock: { value in
             resultContainer = try! value.get()
         }, outputOperation: outputOperation)
         

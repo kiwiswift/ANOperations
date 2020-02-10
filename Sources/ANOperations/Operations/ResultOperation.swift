@@ -5,25 +5,21 @@
 //  Created by Christiano Gontijo on 10/02/20.
 //
 
-open class ResultOperation<Input>: InputOperation<Input> {
+public class ResultOperation<Output>: ANOperation, OutputOperation {
     
-    typealias BindBlock = (Result<Input, Error>) -> Void
+    public var outputValue: ValueState<Output> = .pending
     
-    var bindBlock: BindBlock
+    public typealias TransformationBlock = () -> Output
     
-    init<O>(bindBlock: @escaping BindBlock, outputOperation: O) where O: OutputOperation, O.Output == Input {
-        self.bindBlock = bindBlock
-        super.init(outputOperation: outputOperation)
+    private let block: TransformationBlock
+    
+    public init(block: @escaping TransformationBlock) {
+        self.block = block
+        super.init()
     }
     
     public override func execute() {
-        guard let inputValue = self.inputValue.get() else {
-            self.finishWithError(OperationError(.inputValueNotSet))
-            return
-        }
-        let result = Result(inputValue, self.errors.first)
-        bindBlock(result)
-        self.finish()
+        let outputValue = block()
+        self.finish(with: outputValue)
     }
-    
 }

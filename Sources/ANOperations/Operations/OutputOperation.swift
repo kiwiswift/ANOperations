@@ -35,16 +35,19 @@ public extension OutputOperation {
 
 public extension OutputOperation {
     
-    func map<N>(_ transform: @escaping (Output) -> N) -> TransformOperation<Output, N> {
-        let transformOperation = TransformOperation<Output, N>(outputOperation: self, block: transform)
-        self.addDependency(transformOperation)
-        return transformOperation
+    func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
+        let resultOperation = ResultOperation<O> {
+            guard let outputValue = self.outputValue.get() else { fatalError() }
+            return transform(outputValue)
+        }
+        self.addDependency(resultOperation)
+        return resultOperation
     }
     
-    func bind<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
+    func bindOutputValue<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
         let observer = BlockObserver { [weak self] (operation, errors) in
             guard let strongSelf = self,
-                let outputOperation = operation as? O else { return }
+                let outputOperation = operation as? O else { fatalError() }
             strongSelf.outputValue = outputOperation.outputValue
         }
         self.addObserver(observer)
@@ -68,14 +71,3 @@ public extension OutputOperation {
     
 }
 
-extension Result {
-    
-    init(_ value: Success, _ error: Failure?) {
-        if let error = error {
-            self = .failure(error)
-        } else {
-            self = .success(value)
-        }
-    }
-    
-}
