@@ -5,7 +5,7 @@
 //  Created by Christiano Gontijo on 10/02/20.
 //
 
-public class ResultOperation<Output>: ANOperation, OutputOperation {
+open class ResultOperation<Output>: ANOperation, OutputOperation {
     
     public var outputValue: ValueState<Output> = .pending
     
