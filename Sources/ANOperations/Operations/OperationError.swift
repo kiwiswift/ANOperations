@@ -14,6 +14,7 @@ public struct OperationError: Error {
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
         case reachabilityConditionFailed(host: URL)
         case inputValueNotSet
+        case resultOperationNotExecuted
         case timedOut(timeout: TimeInterval)
     }
 

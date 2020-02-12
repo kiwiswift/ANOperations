@@ -404,13 +404,19 @@ open class ANOperation: Operation {
     // swiftlint:enable unavailable_function
 }
 
+//MARK - Chained methods
 public extension ANOperation {
     
+    /// Method to add a condition, returning the operation (self), which allow us to chain the addCondition method when the
+    /// operation is created
+    /// - Parameter condition: the Condition Operation
     func addingCondition(_ condition: OperationCondition) -> Self {
         self.addCondition(condition)
         return self
     }
     
+    /// Method to add an observer, returning the operation (self), which allow us to chain the addObserver method when the
+    /// operation is created
     func addingObserver(_ observer: OperationObserverProtocol) -> Self {
         self.addObserver(observer)
         return self

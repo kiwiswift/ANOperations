@@ -18,16 +18,26 @@ public protocol OutputOperation: ANOperation {
 public extension OutputOperation {
     
     var outputResult: Result<Output, Error>? {
-        if let value = outputValue.get() {
-            return .success(value)
-        } else if errors.count > 0 { //TODO: Create an error object and wrap all error ocurrencies as underlying errors
-            return .failure(self.errors.first!)
-        }
-        return nil
+        get {
+            if let value = outputValue.get() {
+                return .success(value)
+            } else if errors.count > 0 { //TODO: Create an error object and wrap all error ocurrencies as underlying errors
+                return .failure(self.errors.first!)
+            }
+            return nil
+            }
     }
     
     func finish(with value: Output) {
         self.outputValue = .ready(value)
+        self.finish()
+    }
+    
+    func finish(with result: Result<Output, Error>) {
+        switch result {
+        case let .success(value): self.finish(with: value)
+        case let .failure(error): self.finishWithError(error)
+        }
         self.finish()
     }
     
@@ -37,8 +47,15 @@ public extension OutputOperation {
     
     func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
         let resultOperation = ResultOperation<O> { [weak self] in
-            guard let outputValue = self?.outputValue.get() else { fatalError() }
-            return transform(outputValue)
+            guard let outputValue = self?.outputValue.get() else {
+                if let error = self?.errors.first {
+                    return .failure(error)
+                } else {
+                    return .failure(OperationError(.resultOperationNotExecuted))
+                }
+            }
+            let returnValue = transform(outputValue)
+            return .success(returnValue)
         }
         resultOperation.addSource(self)
         return resultOperation
@@ -59,7 +76,7 @@ public extension OutputOperation {
         let observer = BlockObserver { [weak self] _, errors in
             guard let strongSelf = self,
                 let result = strongSelf.outputResult else {
-                    let error = OperationError(.inputValueNotSet)
+                    let error = OperationError(.resultOperationNotExecuted)
                     block(Result.failure(error))
                     return
             }

@@ -12,7 +12,7 @@ open class ResultOperation<Output>: ANOperation, OutputOperation {
     // MARK: Transformation Dependencies
     internal var sourceOperations: [ANOperation] = []
     
-    public typealias TransformationBlock = () -> Output
+    public typealias TransformationBlock = () -> Result<Output, Error>
     
     private let block: TransformationBlock
     
