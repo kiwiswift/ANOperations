@@ -9,7 +9,7 @@ public protocol OutputOperation: ANOperation {
     
     associatedtype Output
     var outputValue: ValueState<Output> { get set }
-    var outputResult: Result<Output, Error>? { get }
+//    var outputResult: Result<Output, Error>? { get }
     
     func finish(with value: Output)
     
@@ -17,16 +17,16 @@ public protocol OutputOperation: ANOperation {
 
 public extension OutputOperation {
     
-    var outputResult: Result<Output, Error>? {
-        get {
-            if let value = outputValue.get() {
-                return .success(value)
-            } else if errors.count > 0 { //TODO: Create an error object and wrap all error ocurrencies as underlying errors
-                return .failure(self.errors.first!)
-            }
-            return nil
-            }
-    }
+//    var outputResult: Result<Output, Error>? {
+//        get {
+//            if let value = outputValue.get() {
+//                return .success(value)
+//            } else if errors.count > 0 { //TODO: Create an error object and wrap all error ocurrencies as underlying errors
+//                return .failure(self.errors.first!)
+//            }
+//            return nil
+//            }
+//    }
     
     func finish(with value: Output) {
         self.outputValue = .ready(value)
@@ -70,17 +70,11 @@ public extension OutputOperation {
         self.addObserver(observer)
     }
     
-    typealias BindBlock = (Result<Output, Error>) -> Void
+    typealias BindBlock = (Output?, [Error]?) -> Void
     
     func binding<Input>(block: @escaping BindBlock) -> Self where Output == Input {
         let observer = BlockObserver { [weak self] _, errors in
-            guard let strongSelf = self,
-                let result = strongSelf.outputResult else {
-                    let error = OperationError(.resultOperationNotExecuted)
-                    block(Result.failure(error))
-                    return
-            }
-            block(result)
+            block(self?.outputValue.get(), self?.errors)
         }
         self.addObserver(observer)
         return self

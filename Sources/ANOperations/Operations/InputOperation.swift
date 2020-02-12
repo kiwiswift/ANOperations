@@ -27,11 +27,11 @@ open class InputOperation<Input>: ANOperation {
         self.passDataBlock = { }
         super.init()
         self.passDataBlock = { [weak self] in
-            guard let outputValue = try outputOperation.outputResult?.get() else {
-                self?.finish() //TODO: when value doesn't exist in Output Result, do we really want to finish the operation without an error?
-                return
+            if let outputValue = outputOperation.outputValue.get() {
+                self?.inputValue = .ready(outputValue)
+            } else if outputOperation.errors.count > 0 {
+                self?.finish(outputOperation.errors)
             }
-            self?.inputValue = .ready(outputValue)
         }
         self.addDependency(outputOperation)
     }

@@ -1070,7 +1070,7 @@ final class ANOperationsTests: XCTestCase {
         let operation = TestOutputOperation()
         operation.addObserver(BlockObserver(finishHandler: { _, _ in
             expect.fulfill()
-            XCTAssertEqual(try? operation.outputResult?.get(), "Finished")
+            XCTAssertEqual(operation.outputValue.get(), "Finished")
             XCTAssertEqual(operation.errors.count, 0)
         }))
         
@@ -1093,14 +1093,12 @@ final class ANOperationsTests: XCTestCase {
         
         let expect = expectation(description: "Output")
         let operation = TestOutputOperation()
-        operation.addObserver(BlockObserver(finishHandler: { _, _ in
-            do {
-                _ = try operation.outputResult?.get()
-                XCTFail("Should throw")
-            } catch {
-                XCTAssertEqual((error as NSError).code, 123)
-                            XCTAssertEqual(operation.errors.count, 1)
-            }
+        operation.addObserver(BlockObserver(finishHandler: { operation, errors in
+            let outputOperation = operation as? TestOutputOperation
+            XCTAssertNotNil(outputOperation)
+            XCTAssertNil(outputOperation!.outputValue.get())
+            XCTAssertEqual((errors.first as NSError?)?.code, 123)
+            XCTAssertEqual(outputOperation!.errors.count, 1)
             expect.fulfill()
         }))
         
@@ -1197,7 +1195,7 @@ final class ANOperationsTests: XCTestCase {
         let outputOperation = TestOutputOperation()
         let inputOperation = TestInputOutputOperation(outputOperation: outputOperation)
         inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
-            XCTAssertEqual(try? inputOperation.outputResult?.get(), "199")
+            XCTAssertEqual(inputOperation.outputValue.get(), "199")
             XCTAssertEqual(outputOperation.errors.count, 0)
             XCTAssertEqual(inputOperation.errors.count, 0)
             expect.fulfill()
@@ -1304,8 +1302,8 @@ final class ANOperationsTests: XCTestCase {
         
         var resultContainer: Int? = nil
         let outputOperation = TestOutputOperation()
-            .binding { value in
-                resultContainer = try! value.get()
+            .binding { value, errors in
+                resultContainer = value
         }.addingObserver(BlockObserver(finishHandler: { _, _ in
             XCTAssertEqual(resultContainer, 199)
             expect.fulfill()
@@ -1331,7 +1329,7 @@ final class ANOperationsTests: XCTestCase {
         var resultContainer: String?
         let outputOperation = TestOutputOperation()
             .map { String($0) }
-            .binding { resultContainer = try! $0.get() }
+            .binding { value, errors in resultContainer = value }
             .addingObserver(BlockObserver(finishHandler: { _, _ in
                 XCTAssertEqual(resultContainer, "199")
                 expect.fulfill()
