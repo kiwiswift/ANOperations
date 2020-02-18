@@ -19,7 +19,7 @@ open class InputOperation<Input>: ANOperation {
     
     typealias PassDataBlock = () throws -> Void
     
-    var inputValue: ValueState<Input> = .pending
+    public var inputValue: ValueState<Input> = .pending
     
     var passDataBlock: PassDataBlock
     
