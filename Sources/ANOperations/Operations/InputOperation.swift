@@ -5,6 +5,8 @@
 //  Created by Christiano Gontijo on 8/02/20.
 //
 
+import Foundation
+
 public enum ValueState<T> {
     case pending
     case ready(T)
@@ -21,11 +23,19 @@ open class InputOperation<Input>: ANOperation {
     
     public var inputValue: ValueState<Input> = .pending
     
-    private var passDataBlock: PassDataBlock
+    private var passDataBlock: PassDataBlock = { }
     
     public init<O>(outputOperation: O) where O: OutputOperation, O.Output == Input {
-        self.passDataBlock = { }
         super.init()
+        self.bindValue(from: outputOperation)
+        self.addDependency(outputOperation)
+    }
+    
+    override public init() {
+        super.init()
+    }
+    
+    public func bindValue<O>(from outputOperation: O) where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { [weak self] in
             if let outputValue = outputOperation.outputValue.get() {
                 self?.inputValue = .ready(outputValue)
@@ -33,7 +43,17 @@ open class InputOperation<Input>: ANOperation {
                 self?.finish(outputOperation.errors)
             }
         }
-        self.addDependency(outputOperation)
+    }
+    
+    public func bindingValue<O>(from outputOperation: O) -> Self where O: OutputOperation, O.Output == Input {
+        self.bindValue(from: outputOperation)
+        return self
+    }
+    
+    public func injectValue<O>(from operation: O, block: @escaping (O) -> Input) where O: Operation {
+        self.passDataBlock = { [weak self] in
+            self?.inputValue = .ready(block(operation))
+        }
     }
     
     override func operationDidStart() {
