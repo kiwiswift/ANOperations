@@ -17,17 +17,6 @@ public protocol OutputOperation: ANOperation {
 
 public extension OutputOperation {
     
-//    var outputResult: Result<Output, Error>? {
-//        get {
-//            if let value = outputValue.get() {
-//                return .success(value)
-//            } else if errors.count > 0 { //TODO: Create an error object and wrap all error ocurrencies as underlying errors
-//                return .failure(self.errors.first!)
-//            }
-//            return nil
-//            }
-//    }
-    
     func finish(with value: Output) {
         self.outputValue = .ready(value)
         self.finish()
@@ -39,6 +28,16 @@ public extension OutputOperation {
         case let .failure(error): self.finishWithError(error)
         }
         self.finish()
+    }
+    
+    func finish(value: Output?, errors: [Error]?) {
+        if let errors = errors, errors.count > 0 {
+            self.finish(errors)
+        } else if let value = value {
+            self.finish(with: value)
+        } else {
+            self.finish()
+        }
     }
     
 }
@@ -61,7 +60,7 @@ public extension OutputOperation {
         return resultOperation
     }
     
-    func bindOutputValue<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
+    func bindOperation<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
         let observer = BlockObserver { [weak self] (operation, errors) in
             guard let strongSelf = self,
                 let outputOperation = operation as? O else { fatalError() }
@@ -78,6 +77,12 @@ public extension OutputOperation {
         }
         self.addObserver(observer)
         return self
+    }
+    
+    func bindValue(to block:  @escaping @autoclosure () -> Output) {
+        self.addObserver(BlockObserver(finishHandler: { [weak self] _, _ in
+            self?.outputValue = .ready(block())
+        }))
     }
     
 }
