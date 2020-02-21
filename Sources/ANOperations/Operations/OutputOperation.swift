@@ -60,7 +60,7 @@ public extension OutputOperation {
         return resultOperation
     }
     
-    func bindOperation<O: OutputOperation>(from outputOpearation: O) where O.Output == Self.Output {
+    func bindValue<O: OutputOperation>(to outputOpearation: O) where O.Output == Self.Output {
         let observer = BlockObserver { [weak self] (operation, errors) in
             guard let strongSelf = self,
                 let outputOperation = operation as? O else { fatalError() }
