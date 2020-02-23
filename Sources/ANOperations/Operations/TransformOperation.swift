@@ -23,10 +23,9 @@ open class TransformOperation<Input, Output>: InputOperation<Input>, OutputOpera
         super.init()
     }
     
-    public override func execute() {
-        guard let inputValue = self.inputValue.get() else { fatalError() } //TODO: Change fatalerror to error handling
+    public override func execute(with value: Input) {
         do {
-            let outputValue = try block(inputValue)
+            let outputValue = try block(value)
             self.finish(with: outputValue)
         } catch {
             self.finishWithError(error)

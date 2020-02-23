@@ -35,14 +35,27 @@ open class InputOperation<Input>: ANOperation {
         super.init()
     }
     
-    public func bindValue<O>(from outputOperation: O) where O: OutputOperation, O.Output == Input {
+    override open func execute() {
+        guard let inputValue = self.inputValue.get() else {
+            self.finishWithError(OperationError(.inputValueNotSet))
+            return
+        }
+        self.execute(with: inputValue)
+    }
+    
+    open func execute(with value: Input) {
+        fatalError("Needs Implementation")
+    }
+    
+    public func bindValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool = false) where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { [weak self] in
             if let outputValue = outputOperation.outputValue.get() {
                 self?.inputValue = .ready(outputValue)
-            } else if outputOperation.errors.count > 0 {
+            } else if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
                 self?.finish(outputOperation.errors)
             }
         }
+        self.addDependency(outputOperation)
     }
     
     public func bindingValue<O>(from outputOperation: O) -> Self where O: OutputOperation, O.Output == Input {
