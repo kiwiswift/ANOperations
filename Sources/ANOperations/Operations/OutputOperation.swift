@@ -67,15 +67,18 @@ public extension OutputOperation {
             let returnValue = transform(outputValue)
             return .success(returnValue)
         }
+        if let name = self.name {
+            resultOperation.name = "Result of \(name)"
+        }
         resultOperation.addSource(self)
         return resultOperation
     }
     
-    func bindValue<O: OutputOperation>(to outputOpearation: O) where O.Output == Self.Output {
+    func bindOutput<O: OutputOperation>(toResultOf outputOperation: O) where O.Output == Self.Output {
         let observer = BlockObserver { [weak self] (operation, errors) in
-            guard let strongSelf = self,
-                let outputOperation = operation as? O else { fatalError() }
+            guard let strongSelf = self else { fatalError() }
             strongSelf.outputValue = outputOperation.outputValue
+            strongSelf.finish()
         }
         self.addObserver(observer)
     }

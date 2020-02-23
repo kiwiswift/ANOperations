@@ -12,7 +12,8 @@ class Log {
     static func write(name: String, state: State, errors: [Error]?) {
         var message = "[ANOperation] \(name) \(state)"
         if let errors = errors, errors.count > 0 {
-            message += "with \(errors.count) errors"
+            let errorDescriptions = errors.map{ $0.localizedDescription }.joined(separator: "\n")
+            message += "with \(errors.count) errors : \(errorDescriptions)"
         }
         print(message)
     }
