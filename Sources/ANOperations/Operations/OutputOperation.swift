@@ -40,9 +40,20 @@ public extension OutputOperation {
         }
     }
     
+    func finish(catching block: @autoclosure () throws -> Output) {
+        do {
+            let output = try block()
+            self.finish(with: output)
+        } catch {
+            self.finishWithError(error)
+        }
+    }
+    
 }
 
 public extension OutputOperation {
+    
+    typealias BindBlock = (Output?, [Error]?) -> Void
     
     func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
         let resultOperation = ResultOperation<O> { [weak self] in
@@ -69,7 +80,32 @@ public extension OutputOperation {
         self.addObserver(observer)
     }
     
-    typealias BindBlock = (Output?, [Error]?) -> Void
+    func bind<Input>(block: @escaping BindBlock) where Output == Input {
+        let observer = BlockObserver { [weak self] _, errors in
+            block(self?.outputValue.get(), self?.errors)
+        }
+        self.addObserver(observer)
+    }
+    
+    @discardableResult
+    func onSuccess(executeBlock block: @escaping (Output) -> Void) -> Self {
+        let observer = BlockObserver { [weak self] _, errors in
+            if let value = self?.outputValue.get() {
+                block(value)
+            }
+        }
+        self.addObserver(observer)
+        return self
+    }
+    
+    @discardableResult
+    func onFailure(executeBlock block: @escaping ([Error]) -> Void) -> Self {
+        let observer = BlockObserver { _, errors in
+            block(errors)
+        }
+        self.addObserver(observer)
+        return self
+    }
     
     func binding<Input>(block: @escaping BindBlock) -> Self where Output == Input {
         let observer = BlockObserver { [weak self] _, errors in
@@ -79,10 +115,12 @@ public extension OutputOperation {
         return self
     }
     
-    func bindValue(to block:  @escaping @autoclosure () -> Output) {
+    @discardableResult
+    func bindValue(to block:  @escaping @autoclosure () -> Output) -> Self {
         self.addObserver(BlockObserver(finishHandler: { [weak self] _, _ in
             self?.outputValue = .ready(block())
         }))
+        return self
     }
     
 }

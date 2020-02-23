@@ -17,6 +17,11 @@ import Foundation
  about interesting operation state changes
  */
 open class ANOperation: Operation {
+    
+    //Use this property to indicate that an operation should stop at a conditional breakpoint when debugging
+    open var debug: Bool { false }
+    //Indicates that the operation flow must be logged
+    var log: Bool
     private static var anoperationContext = 0
 
     /*
@@ -57,12 +62,16 @@ open class ANOperation: Operation {
     }
 
     public override init() {
+        self.log = ANOperation.log
         super.init()
+        self.name = type(of: self).description()
         addObserver(self, forKeyPath: KeyPaths.isReady, options: [], context: &ANOperation.anoperationContext)
+        self.log(state: .initialized)
     }
 
     deinit {
         self.removeObserver(self, forKeyPath: KeyPaths.isReady, context: &ANOperation.anoperationContext)
+        self.log(state: .deinitialized)
     }
 
     open override func observeValue(forKeyPath keyPath: String?,
@@ -116,6 +125,7 @@ open class ANOperation: Operation {
                 _state = newValue
             }
             didChangeValue(forKey: KeyPaths.state)
+            self.log(state: newValue)
         }
     }
 
@@ -131,7 +141,7 @@ open class ANOperation: Operation {
         switch state {
         case .initialized, .evaluatingConditions, .pending:
             return false
-        case .ready, .executing, .finishing, .finished:
+        case .ready, .executing, .finishing, .finished, .deinitialized:
             return true
         }
     }
@@ -349,6 +359,15 @@ open class ANOperation: Operation {
         }
         else {
             finish()
+        }
+    }
+    
+    public final func finish(catching block: @autoclosure () throws -> Void) {
+        do {
+            try block()
+            self.finish()
+        } catch {
+            self.finishWithError(error)
         }
     }
 
