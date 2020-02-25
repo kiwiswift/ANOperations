@@ -53,7 +53,10 @@ public extension OutputOperation {
 
 public extension OutputOperation {
     
-    typealias BindBlock = (Output?, [Error]?) -> Void
+//    func then<Input>(execute operation: InputOperation<Input>, onlyIfSuccessful: Bool) -> [ANOperation] where Input == Output {
+//        operation.injectValue(from: self, executeOnlyWhenSuccessful: onlyIfSuccessful)
+//        return [self, operation]
+//    }
     
     func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
         let resultOperation = ResultOperation<O> { [weak self] in
@@ -61,7 +64,7 @@ public extension OutputOperation {
                 if let error = self?.errors.first {
                     return .failure(error)
                 } else {
-                    return .failure(OperationError(.resultOperationNotExecuted))
+                    return .failure(OperationError(.inputValueNotSet))
                 }
             }
             let returnValue = transform(outputValue)
@@ -83,12 +86,6 @@ public extension OutputOperation {
         self.addObserver(observer)
     }
     
-    func bind<Input>(block: @escaping BindBlock) where Output == Input {
-        let observer = BlockObserver { [weak self] _, errors in
-            block(self?.outputValue.get(), self?.errors)
-        }
-        self.addObserver(observer)
-    }
     
     @discardableResult
     func onSuccess(executeBlock block: @escaping (Output) -> Void) -> Self {
@@ -109,17 +106,17 @@ public extension OutputOperation {
         self.addObserver(observer)
         return self
     }
-    
-    func binding<Input>(block: @escaping BindBlock) -> Self where Output == Input {
+
+    func onCompletion<Input>(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self where Output == Input {
         let observer = BlockObserver { [weak self] _, errors in
             block(self?.outputValue.get(), self?.errors)
         }
         self.addObserver(observer)
         return self
     }
-    
+
     @discardableResult
-    func bindValue(to block:  @escaping @autoclosure () -> Output) -> Self {
+    func bindOutputValue(toValueOf block:  @escaping @autoclosure () -> Output) -> Self {
         self.addObserver(BlockObserver(finishHandler: { [weak self] _, _ in
             self?.outputValue = .ready(block())
         }))

@@ -13,9 +13,9 @@ open class TransformOperation<Input, Output>: InputOperation<Input>, OutputOpera
     
     private let block: TransformationBlock
     
-    public init<O>(outputOperation: O, block: @escaping TransformationBlock) where O: OutputOperation, O.Output == Input {
+    public init<O>(outputOperation: O, executeOnlyWhenSuccessful: Bool, block: @escaping TransformationBlock) where O: OutputOperation, O.Output == Input {
         self.block = block
-        super.init(outputOperation: outputOperation)
+        super.init(outputOperation: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
     public init(block: @escaping TransformationBlock) {

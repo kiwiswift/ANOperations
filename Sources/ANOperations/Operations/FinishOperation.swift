@@ -11,9 +11,9 @@ open class FinishOperation<Input>: InputOperation<Input> {
     
     var bindBlock: BindBlock
     
-    init<O>(bindBlock: @escaping BindBlock, outputOperation: O) where O: OutputOperation, O.Output == Input {
+    init<O>(bindBlock: @escaping BindBlock, outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
         self.bindBlock = bindBlock
-        super.init(outputOperation: outputOperation)
+        super.init(outputOperation: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
     public override func execute() {

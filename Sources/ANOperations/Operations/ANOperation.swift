@@ -19,7 +19,7 @@ import Foundation
 open class ANOperation: Operation {
     
     //Use this property to indicate that an operation should stop at a conditional breakpoint when debugging
-    open var debug: Bool { false }
+    open var debug: Bool = false
     //Indicates that the operation flow must be logged
     var log: Bool
     private static var anoperationContext = 0

@@ -19,16 +19,15 @@ public enum ValueState<T> {
 
 open class InputOperation<Input>: ANOperation {
     
-    typealias PassDataBlock = () throws -> Void
+    typealias PassDataBlock = () -> ValueState<Input>
     
     public var inputValue: ValueState<Input> = .pending
     
-    private var passDataBlock: PassDataBlock = { }
+    private var passDataBlock: PassDataBlock?
     
-    public init<O>(outputOperation: O) where O: OutputOperation, O.Output == Input {
+    public init<O>(outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
         super.init()
-        self.bindValue(from: outputOperation)
-        self.addDependency(outputOperation)
+        self.injectValue(from: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
     override public init() {
@@ -36,7 +35,8 @@ open class InputOperation<Input>: ANOperation {
     }
     
     override open func execute() {
-        guard let inputValue = self.inputValue.get() else {
+        guard let inputValue = self.passDataBlock?().get() ?? self.inputValue.get() else {
+            guard !self.isFinished else { return } //The operation might have already been finished with dependency errors after passDataBlock is executed
             self.finishWithError(OperationError(.inputValueNotSet))
             return
         }
@@ -47,33 +47,16 @@ open class InputOperation<Input>: ANOperation {
         fatalError("Needs Implementation")
     }
     
-    public func bindValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool = false) where O: OutputOperation, O.Output == Input {
+    @discardableResult
+    public func injectValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool) -> Self where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { [weak self] in
-            if let outputValue = outputOperation.outputValue.get() {
-                self?.inputValue = .ready(outputValue)
-            } else if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
+            if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
                 self?.finish(outputOperation.errors)
             }
+            return outputOperation.outputValue
         }
         self.addDependency(outputOperation)
-    }
-    
-    public func bindingValue<O>(from outputOperation: O) -> Self where O: OutputOperation, O.Output == Input {
-        self.bindValue(from: outputOperation)
         return self
     }
-    
-    public func injectValue<O>(from operation: O, block: @escaping (O) -> Input) where O: Operation {
-        self.passDataBlock = { [weak self] in
-            self?.inputValue = .ready(block(operation))
-        }
-    }
-    
-    override func operationDidStart() {
-        do {
-            try passDataBlock()
-        } catch {
-            finishWithError(error)
-        }
-    }
+
 }
