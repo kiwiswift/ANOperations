@@ -14,7 +14,7 @@ public struct OperationError: Error {
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
         case reachabilityConditionFailed(host: URL)
         case inputValueNotSet
-        case resultOperationNotExecuted
+        case dependenciesFailed([Error])
         case timedOut(timeout: TimeInterval)
     }
 
@@ -34,6 +34,14 @@ public struct OperationError: Error {
 
     public static func timedOut(timeout: TimeInterval) -> OperationError {
         return OperationError(.timedOut(timeout: timeout))
+    }
+    
+    public static func dependenciesFailed(with errors: [Error]) -> OperationError {
+        return OperationError(.dependenciesFailed(errors))
+    }
+    
+    public static func inputValueNotSet() -> OperationError {
+        return OperationError(.inputValueNotSet)
     }
 
     public init(_ reason: Reason) {
