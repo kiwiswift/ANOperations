@@ -107,7 +107,7 @@ public extension OutputOperation {
         return self
     }
 
-    func onCompletion<Input>(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self where Output == Input {
+    func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
         let observer = BlockObserver { [weak self] _, errors in
             block(self?.outputValue.get(), self?.errors)
         }
