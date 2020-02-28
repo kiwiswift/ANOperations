@@ -5,7 +5,7 @@
 //  Created by Christiano Gontijo on 10/02/20.
 //
 
-open class FinishOperation<Input>: InputOperation<Input> {
+/*open class FinishOperation<Input>: InputOperation<Input> {
     
     typealias BindBlock = (Result<Input, Error>) -> Void
     
@@ -39,3 +39,4 @@ extension Result {
     }
     
 }
+*/
