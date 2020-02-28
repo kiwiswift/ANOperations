@@ -11,4 +11,3 @@ open class InputOutputOperation<Input, Output>: InputOperation<Input>, OutputOpe
     
 }
 
-

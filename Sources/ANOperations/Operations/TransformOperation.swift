@@ -5,9 +5,7 @@
 //  Created by Christiano Gontijo on 8/02/20.
 //
 
-open class TransformOperation<Input, Output>: InputOperation<Input>, OutputOperation {
-    
-    public var outputValue: ValueState<Output> = .pending
+open class TransformOperation<Input, Output>: InputOutputOperation<Input, Output> {
     
     public typealias TransformationBlock = (Input) throws -> Output
     

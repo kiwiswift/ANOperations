@@ -125,3 +125,8 @@ public extension OutputOperation {
     
 }
 
+open class AnyOutputOperation<Output>: ANOperation, OutputOperation {
+    
+    public var outputValue: ValueState<Output> = .pending
+    
+}

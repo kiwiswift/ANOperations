@@ -21,7 +21,7 @@ open class InputOperation<Input>: ANOperation {
     
     typealias PassDataBlock = () -> ValueState<Input>
     
-    public var inputValue: ValueState<Input> = .pending
+    private var inputValue: ValueState<Input> = .pending
     
     private var passDataBlock: PassDataBlock?
     
@@ -35,12 +35,20 @@ open class InputOperation<Input>: ANOperation {
     }
     
     override open func execute() {
-        guard let inputValue = self.passDataBlock?().get() ?? self.inputValue.get() else {
+        guard let inputValue = self.getInputValue() else {
             guard !self.isFinished else { return } //The operation might have already been finished with dependency errors after passDataBlock is executed
             self.finishWithError(OperationError(.inputValueNotSet))
             return
         }
         self.execute(with: inputValue)
+    }
+    
+    public func getInputValue() -> Input? {
+        return self.passDataBlock?().get() ?? self.inputValue.get()
+    }
+    
+    public func setInputValue(to value: Input) {
+        self.inputValue = .ready(value)
     }
     
     open func execute(with value: Input) {

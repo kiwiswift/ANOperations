@@ -10,6 +10,7 @@ import Foundation
 
 public struct OperationError: Error {
     public enum Reason {
+        case conditionNotMet(condition: String)
         case negatedConditionFailed(notCondition: String)
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
         case reachabilityConditionFailed(host: URL)
@@ -19,6 +20,10 @@ public struct OperationError: Error {
     }
 
     public let reason: Reason
+    
+    public static func conditionNotMet(condition: String) -> OperationError {
+        return OperationError(.conditionNotMet(condition: condition))
+    }
 
     public static func negatedConditionFailed(notCondition: String) -> OperationError {
         return OperationError(.negatedConditionFailed(notCondition: notCondition))

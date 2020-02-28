@@ -426,6 +426,11 @@ open class ANOperation: Operation {
 //MARK - Chained methods
 public extension ANOperation {
     
+    func then(_ operation: ANOperation) -> [ANOperation] {
+        operation.addDependency(self)
+        return [self, operation]
+    }
+    
     /// Method to add a condition, returning the operation (self), which allow us to chain the addCondition method when the
     /// operation is created
     /// - Parameter condition: the Condition Operation
@@ -449,4 +454,14 @@ private extension ANOperation {
         static let cancelledState = "cancelledState"
         static let isReady = "isReady"
     }
+}
+
+extension Array where Element == ANOperation {
+    
+    func then(_ operation: ANOperation) -> [ANOperation] {
+        guard let lastOperation = self.last else { return self }
+        operation.addDependency(lastOperation)
+        return self + [operation]
+    }
+    
 }
