@@ -11,14 +11,16 @@ open class TransformOperation<Input, Output>: InputOutputOperation<Input, Output
     
     private let block: TransformationBlock
     
-    public init<O>(outputOperation: O, executeOnlyWhenSuccessful: Bool, block: @escaping TransformationBlock) where O: OutputOperation, O.Output == Input {
+    public init<O>(name: String? = nil, outputOperation: O, executeOnlyWhenSuccessful: Bool, block: @escaping TransformationBlock) where O: OutputOperation, O.Output == Input {
         self.block = block
-        super.init(outputOperation: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
+        let name = name ?? "TransformOperation<\(Input.self),\(Output.self)>" + (outputOperation.name.map { "injected from \($0)" } ?? "")
+        super.init(name: name, outputOperation: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
-    public init(block: @escaping TransformationBlock) {
+    public init(name: String = "TransformOperation<\(Input.self),\(Output.self)>",
+                block: @escaping TransformationBlock) {
         self.block = block
-        super.init()
+        super.init(name: name)
     }
     
     public override func execute(with value: Input) {

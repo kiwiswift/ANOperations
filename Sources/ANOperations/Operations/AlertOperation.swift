@@ -39,7 +39,7 @@
         public init(presentationContext: UIViewController? = nil) {
             self.presentationContext = presentationContext ?? UIApplication.shared.keyWindow?.rootViewController
 
-            super.init()
+            super.init(name: "AlertOperation")
             addCondition(AlertPresentation())
 
             /*

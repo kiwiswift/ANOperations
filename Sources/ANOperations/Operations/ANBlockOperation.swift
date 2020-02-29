@@ -26,7 +26,7 @@ public final class ANBlockOperation: ANOperation {
      */
     public init(block: OperationBlock? = nil) {
         self.block = block
-        super.init()
+        super.init(name: "BlockOperation")
     }
 
     /**

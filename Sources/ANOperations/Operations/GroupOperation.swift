@@ -50,7 +50,8 @@ open class GroupOperation: ANOperation {
     }
 
     public init(operations: [Operation]) {
-        super.init()
+        let name = "GroupOperation of \(operations.compactMap { $0.name }.joined(separator: ","))"
+        super.init(name: name)
 
         internalQueue.isSuspended = true
         internalQueue.delegate = self

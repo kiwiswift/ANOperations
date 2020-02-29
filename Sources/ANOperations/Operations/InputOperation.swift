@@ -25,13 +25,13 @@ open class InputOperation<Input>: ANOperation {
     
     private var passDataBlock: PassDataBlock?
     
-    public init<O>(outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
-        super.init()
+    public init<O>(name: String, outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
+        super.init(name: name)
         self.injectValue(from: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
-    override public init() {
-        super.init()
+    public override init(name: String) {
+        super.init(name: name)
     }
     
     override open func execute() {

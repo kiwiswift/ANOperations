@@ -36,12 +36,12 @@ public final class DelayOperation: ANOperation {
 
     public init(interval: TimeInterval) {
         delay = .interval(interval)
-        super.init()
+        super.init(name: "DelayOperation")
     }
 
     public init(until date: Date) {
         delay = .date(date)
-        super.init()
+        super.init(name: "DelayOperation")
     }
 
     public override func execute() {

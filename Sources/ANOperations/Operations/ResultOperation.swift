@@ -18,7 +18,7 @@ open class ResultOperation<Output>: ANOperation, OutputOperation {
     
     public init(block: @escaping TransformationBlock) {
         self.block = block
-        super.init()
+        super.init(name: "ResultOperation<\(Output.self)>")
     }
     
     public override func execute() {
