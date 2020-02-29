@@ -61,17 +61,17 @@ open class ANOperation: Operation {
         return [KeyPaths.cancelledState]
     }
 
-    public override init() {
+    public init(name: String) {
         self.log = ANOperation.log
         super.init()
-        self.name = type(of: self).description()
+        self.name = name
         addObserver(self, forKeyPath: KeyPaths.isReady, options: [], context: &ANOperation.anoperationContext)
         self.log(state: .initialized)
     }
 
     deinit {
         self.removeObserver(self, forKeyPath: KeyPaths.isReady, context: &ANOperation.anoperationContext)
-        self.log(state: .deinitialized)
+        self.log(stage: .deinitialising)
     }
 
     open override func observeValue(forKeyPath keyPath: String?,
@@ -93,6 +93,7 @@ open class ANOperation: Operation {
      if appropriate.
      */
     open func didEnqueue(in queue: ANOperationQueue) {
+        self.log(stage: .enqueuing)
         stateAccess.lock()
         defer { stateAccess.unlock() }
         state = .pending
@@ -141,7 +142,7 @@ open class ANOperation: Operation {
         switch state {
         case .initialized, .evaluatingConditions, .pending:
             return false
-        case .ready, .executing, .finishing, .finished, .deinitialized:
+        case .ready, .executing, .finishing, .finished:
             return true
         }
     }

@@ -62,7 +62,7 @@ private class CloudKitPermissionOperation: ANOperation {
     init(container: CKContainer, permission: CKContainer.Application.Permissions) {
         self.container = container
         self.permission = permission
-        super.init()
+        super.init(name: "CloudKitPermissionOperation")
 
         if permission != [] {
             /*
