@@ -58,7 +58,9 @@ open class InputOperation<Input>: ANOperation {
     @discardableResult
     public func injectValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool) -> Self where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { [weak self] in
-            if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
+            if outputOperation.isCancelled {
+                self?.cancel()
+            } else if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
                 self?.finish(outputOperation.errors)
             }
             return outputOperation.outputValue

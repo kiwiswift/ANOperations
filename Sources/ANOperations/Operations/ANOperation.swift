@@ -225,7 +225,6 @@ open class ANOperation: Operation {
         OperationConditionEvaluator.evaluate(conditions, operation: self) { failures in
             self.stateAccess.lock()
             defer { self.stateAccess.unlock() }
-
             if !failures.isEmpty {
                 self.cancelWithErrors(failures)
             }
@@ -443,6 +442,13 @@ public extension ANOperation {
     /// Method to add an observer, returning the operation (self), which allow us to chain the addObserver method when the
     /// operation is created
     func addingObserver(_ observer: OperationObserverProtocol) -> Self {
+        self.addObserver(observer)
+        return self
+    }
+
+    @discardableResult
+    func onCancel(executeBlock block: @escaping () -> Void) -> Self {
+        let observer = BlockObserver(cancelHandler: { _ in block() } )
         self.addObserver(observer)
         return self
     }

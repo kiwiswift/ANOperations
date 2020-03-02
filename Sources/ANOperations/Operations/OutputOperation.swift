@@ -17,6 +17,10 @@ public protocol OutputOperation: ANOperation {
 
 public extension OutputOperation {
     
+    var result: Result<Output, Error> {
+        Result(outputValue, self.errors.first)//TODO: Handle all errors as underlying error
+    }
+    
     func finish(with value: Output) {
         self.outputValue = .ready(value)
         self.finish()
@@ -101,6 +105,7 @@ public extension OutputOperation {
     @discardableResult
     func onFailure(executeBlock block: @escaping ([Error]) -> Void) -> Self {
         let observer = BlockObserver { _, errors in
+            guard errors.count > 0 else { return }
             block(errors)
         }
         self.addObserver(observer)
@@ -110,6 +115,16 @@ public extension OutputOperation {
     func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
         let observer = BlockObserver { [weak self] _, errors in
             block(self?.outputValue.get(), self?.errors)
+        }
+        self.addObserver(observer)
+        return self
+    }
+    
+    @discardableResult
+    func bindResultTo(block: @escaping (Result<Output,Error>) -> Void) -> Self {
+        let observer = BlockObserver { [weak self] _, _ in
+            guard let strongSelf = self else { return }
+            block(strongSelf.result)
         }
         self.addObserver(observer)
         return self
@@ -128,5 +143,20 @@ public extension OutputOperation {
 open class AnyOutputOperation<Output>: ANOperation, OutputOperation {
     
     public var outputValue: ValueState<Output> = .pending
+    
+}
+
+extension Result where Failure == Error {
+    
+    init(_ valueState: ValueState<Success>, _ error: Failure?) {
+        if let error = error {
+            self = .failure(error)
+        } else if let value = valueState.get(){
+            self = .success(value)
+        } else {
+            let error = OperationError.outputValueNotSet()
+            self = .failure(error)
+        }
+    }
     
 }
