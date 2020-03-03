@@ -23,6 +23,8 @@ open class InputOperation<Input>: ANOperation {
     
     private var inputValue: ValueState<Input> = .pending
     
+    private var sourceOperations: [ANOperation] = []
+    
     private var passDataBlock: PassDataBlock?
     
     public init<O>(name: String, outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
@@ -52,7 +54,8 @@ open class InputOperation<Input>: ANOperation {
     }
     
     open func execute(with value: Input) {
-        fatalError("Needs Implementation")
+        print("\(self.name) Needs Implementation")
+        finish()
     }
     
     @discardableResult
@@ -66,6 +69,26 @@ open class InputOperation<Input>: ANOperation {
             return outputOperation.outputValue
         }
         self.addDependency(outputOperation)
+        return self
+    }
+    
+    internal func addSource(_ operation: ANOperation) {
+        
+        self.addDependency(operation)
+    }
+    
+    override public func didEnqueue(in queue: ANOperationQueue) {
+        //Extract dependencies that haven't been added to the queue
+        //(e.g. when transformation methods such as 'map' is used)
+        sourceOperations.forEach{ queue.addOperation($0) }
+        super.didEnqueue(in: queue)
+    }
+    
+    
+    public func injectingValue(_ value: Input) -> Self {
+        let injector = InjectorOperation(value: value)
+        self.sourceOperations.append(injector)
+        self.injectValue(from: injector, executeOnlyWhenSuccessful: false)
         return self
     }
 

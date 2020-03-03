@@ -52,7 +52,6 @@ public extension OutputOperation {
             self.finishWithError(error)
         }
     }
-    
 }
 
 public extension OutputOperation {

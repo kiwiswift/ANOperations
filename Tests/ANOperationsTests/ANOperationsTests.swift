@@ -885,7 +885,7 @@ final class ANOperationsTests: XCTestCase {
     }
     
     func testMoveFromPendingToFinishingByWayOfCancelAfterEnteringQueue() {
-        let op = ANOperation()
+        let op = ANOperation(name: "Operation")
         let delay = DelayOperation(interval: 0.1)
         op.addDependency(delay)
         
@@ -1018,7 +1018,7 @@ final class ANOperationsTests: XCTestCase {
             }
         }
         
-        let op = ErrorOp()
+        let op = ErrorOp(name: "ErrorOperation")
         
         opQ.addOperations([op], waitUntilFinished: true)
         
@@ -1045,7 +1045,7 @@ final class ANOperationsTests: XCTestCase {
             }
         }
         
-        let op = ErrorOp()
+        let op = ErrorOp(name: "ErrorOperation")
         
         opQ.addOperations([op], waitUntilFinished: true)
         
@@ -1067,7 +1067,7 @@ final class ANOperationsTests: XCTestCase {
         }
         
         let expect = expectation(description: "Output")
-        let operation = TestOutputOperation()
+        let operation = TestOutputOperation(name: "Operation")
         operation.addObserver(BlockObserver(finishHandler: { _, _ in
             expect.fulfill()
             XCTAssertEqual(operation.outputValue.get(), "Finished")
@@ -1092,7 +1092,7 @@ final class ANOperationsTests: XCTestCase {
         }
         
         let expect = expectation(description: "Output")
-        let operation = TestOutputOperation()
+        let operation = TestOutputOperation(name: "Operation")
         operation.addObserver(BlockObserver(finishHandler: { operation, errors in
             let outputOperation = operation as? TestOutputOperation
             XCTAssertNotNil(outputOperation)
@@ -1122,10 +1122,10 @@ final class ANOperationsTests: XCTestCase {
         class TestInputOperation: InputOperation<String> { }
         
         let expect = expectation(description: "Output")
-        let outputOperation = TestOutputOperation()
-        let inputOperation = TestInputOperation(outputOperation: outputOperation)
+        let outputOperation = TestOutputOperation(name: "OutputOperation")
+        let inputOperation = TestInputOperation(name: "InputOperation", outputOperation: outputOperation, executeOnlyWhenSuccessful: true)
         inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
-            XCTAssertEqual(inputOperation.inputValue.get(), "Finished")
+            XCTAssertEqual(inputOperation.getInputValue(), "Finished")
             XCTAssertEqual(outputOperation.errors.count, 0)
             expect.fulfill()
         }))
@@ -1157,8 +1157,8 @@ final class ANOperationsTests: XCTestCase {
         }
         
         let expect = expectation(description: "Output")
-        let outputOperation = TestOutputOperation()
-        let inputOperation = TestInputOperation(outputOperation: outputOperation)
+        let outputOperation = TestOutputOperation(name: "Operation")
+        let inputOperation = TestInputOperation(name: "Operation", outputOperation: outputOperation, executeOnlyWhenSuccessful: true)
         inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
             XCTAssertEqual((inputOperation.errors.first as NSError?)?.code, 321)
             XCTAssertEqual(outputOperation.errors.count, 1)
@@ -1182,8 +1182,9 @@ final class ANOperationsTests: XCTestCase {
         }
         
         class TestInputOutputOperation: InputOutputOperation<Int,String> {
+            
             override func execute() {
-                guard let intValue = self.inputValue.get() else {
+                guard let intValue = self.getInputValue() else {
                     finish()
                     return
                 }
@@ -1192,8 +1193,8 @@ final class ANOperationsTests: XCTestCase {
         }
         
         let expect = expectation(description: "Output")
-        let outputOperation = TestOutputOperation()
-        let inputOperation = TestInputOutputOperation(outputOperation: outputOperation)
+        let outputOperation = TestOutputOperation(name: "Operation")
+        let inputOperation = TestInputOutputOperation(name: "Operation", outputOperation: outputOperation, executeOnlyWhenSuccessful: true)
         inputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
             XCTAssertEqual(inputOperation.outputValue.get(), "199")
             XCTAssertEqual(outputOperation.errors.count, 0)
@@ -1260,7 +1261,7 @@ final class ANOperationsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
     
-    func test_BindOperation() {
+    /*func test_BindOperation() {
         
         class TestOutputOperation: ANOperation, OutputOperation {
             var outputValue: ValueState<Int> = .pending
@@ -1269,23 +1270,19 @@ final class ANOperationsTests: XCTestCase {
             }
         }
         
+        let resultContainer = 0
         let expect = expectation(description: "Output")
-        let outputOperation = TestOutputOperation()
+        let outputOperation = TestOutputOperation(name: "Operation")
+            .bindOutputValue(toValueOf: resultContainer)
         
-        var resultContainer: Int? = nil
-        let resultOperation = FinishOperation(bindBlock: { value in
-            resultContainer = try! value.get()
-        }, outputOperation: outputOperation)
-        
-        resultOperation.addObserver(BlockObserver(finishHandler: { _, _ in
+        outputOperation.addObserver(BlockObserver(finishHandler: { _, _ in
             XCTAssertEqual(resultContainer, 199)
             expect.fulfill()
         }))
         
         let queue = ANOperationQueue()
-        queue.addOperations([outputOperation, resultOperation], waitUntilFinished: false)
+        queue.addOperations([outputOperation], waitUntilFinished: false)
         
-        XCTAssertEqual(resultOperation.dependencies.count, 1)
         wait(for: [expect], timeout: 5)
     }
     
@@ -1300,11 +1297,10 @@ final class ANOperationsTests: XCTestCase {
         
         let expect = expectation(description: "Output")
         
-        var resultContainer: Int? = nil
-        let outputOperation = TestOutputOperation()
-            .binding { value, errors in
-                resultContainer = value
-        }.addingObserver(BlockObserver(finishHandler: { _, _ in
+        let resultContainer: Int = 0
+        let outputOperation = TestOutputOperation(name: "Operation")
+            .bindOutputValue(toValueOf: resultContainer)
+            .addingObserver(BlockObserver(finishHandler: { _, _ in
             XCTAssertEqual(resultContainer, 199)
             expect.fulfill()
         }))
@@ -1313,7 +1309,7 @@ final class ANOperationsTests: XCTestCase {
         queue.addOperation(outputOperation)
         
         wait(for: [expect], timeout: 5)
-    }
+    }*/
     
     func test_TransformingOperations() {
         
@@ -1327,9 +1323,9 @@ final class ANOperationsTests: XCTestCase {
         let expect = expectation(description: "Transformation")
         
         var resultContainer: String?
-        let outputOperation = TestOutputOperation()
+        let outputOperation = TestOutputOperation(name: "Operation")
             .map { String($0) }
-            .binding { value, errors in resultContainer = value }
+            .bindResultTo { result in resultContainer = try! result.get() }
             .addingObserver(BlockObserver(finishHandler: { _, _ in
                 XCTAssertEqual(resultContainer, "199")
                 expect.fulfill()
