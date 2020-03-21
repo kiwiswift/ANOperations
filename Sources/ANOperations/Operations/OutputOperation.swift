@@ -100,17 +100,8 @@ public extension OutputOperation {
         self.addObserver(observer)
         return self
     }
-    
-    @discardableResult
-    func onFailure(executeBlock block: @escaping ([Error]) -> Void) -> Self {
-        let observer = BlockObserver { _, errors in
-            guard errors.count > 0 else { return }
-            block(errors)
-        }
-        self.addObserver(observer)
-        return self
-    }
 
+    @discardableResult
     func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
         let observer = BlockObserver { [weak self] _, errors in
             block(self?.outputValue.get(), self?.errors)
