@@ -54,7 +54,7 @@ open class InputOperation<Input>: ANOperation {
     }
     
     open func execute(with value: Input) {
-        print("\(self.name) Needs Implementation")
+        print("\(self.name ?? String(describing: self)) Needs Implementation")
         finish()
     }
     
