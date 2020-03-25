@@ -463,6 +463,15 @@ public extension ANOperation {
         return self
     }
     
+    @discardableResult
+    func onCompletion(executeBlock block: @escaping ([Error]?) -> Void) -> Self {
+        let observer = BlockObserver { [weak self] _, errors in
+            block(self?.errors)
+        }
+        self.addObserver(observer)
+        return self
+    }
+    
 }
 
 private extension ANOperation {
