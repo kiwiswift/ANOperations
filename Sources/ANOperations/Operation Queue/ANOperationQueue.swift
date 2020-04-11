@@ -115,7 +115,7 @@ open class ANOperationQueue: OperationQueue {
         }
     }
 
-    public override func addOperations(_ operations: [Operation], waitUntilFinished wait: Bool) {
+    public override func addOperations(_ operations: [Operation], waitUntilFinished wait: Bool = false) {
         /*
          The base implementation of this method does not call `addOperation()`,
          so we'll call it ourselves.

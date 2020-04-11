@@ -55,7 +55,7 @@ class Log {
     static func write(name: String, stage: Stage, errors: [Error]?) {
         var message = "\(name) \(stage.description)"
         if let errors = errors, errors.count > 0 {
-            let errorDescriptions = errors.map{ $0.localizedDescription }.joined(separator: "\n")
+            let errorDescriptions = errors.map{ String(describing: $0) }.joined(separator: "\n")
             message += " with \(errors.count) errors : \(errorDescriptions)"
             print("[ANOperation] \(Log.Stage.finishedWithError.symbol) " + message)
         } else {
