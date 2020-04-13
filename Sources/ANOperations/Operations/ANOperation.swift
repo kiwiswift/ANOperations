@@ -431,6 +431,11 @@ public extension ANOperation {
         return [self, operation]
     }
     
+    func dependingOn(_ operation: Operation) -> Self {
+        self.addDependency(operation)
+        return self
+    }
+    
     /// Method to add a condition, returning the operation (self), which allow us to chain the addCondition method when the
     /// operation is created
     /// - Parameter condition: the Condition Operation
