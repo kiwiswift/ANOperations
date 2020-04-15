@@ -103,8 +103,9 @@ public extension OutputOperation {
 
     @discardableResult
     func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
-        let observer = BlockObserver { [weak self] _, errors in
-            block(self?.outputValue.get(), self?.errors)
+        let observer = BlockObserver { [weak self] _, _ in
+            let errorsCount = self?.errors.count ?? 0
+            block(self?.outputValue.get(), errorsCount > 0 ? self?.errors : nil)
         }
         self.addObserver(observer)
         return self
