@@ -12,7 +12,6 @@ public protocol OutputOperation: ANOperation {
 //    var outputResult: Result<Output, Error>? { get }
     
     func finish(with value: Output)
-    
 }
 
 public extension OutputOperation {
@@ -103,9 +102,10 @@ public extension OutputOperation {
 
     @discardableResult
     func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
-        let observer = BlockObserver { [weak self] _, _ in
-            let errorsCount = self?.errors.count ?? 0
-            block(self?.outputValue.get(), errorsCount > 0 ? self?.errors : nil)
+        let observer = BlockObserver { operation, errors in
+            guard let operation = operation as? Self, !operation.isCancelled else { return }
+            let errorsCount = errors.count
+            block(operation.outputValue.get(), errorsCount > 0 ? errors : nil)
         }
         self.addObserver(observer)
         return self
