@@ -17,7 +17,13 @@ public enum ValueState<T> {
     }
 }
 
-open class InputOperation<Input>: ANOperation {
+public protocol InputOperationProtocol {
+    associatedtype Input
+    @discardableResult
+    func injectValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool) -> Self where O: OutputOperation, O.Output == Input
+}
+
+open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     
     typealias PassDataBlock = () -> ValueState<Input>
     
@@ -60,13 +66,13 @@ open class InputOperation<Input>: ANOperation {
     
     @discardableResult
     public func injectValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool) -> Self where O: OutputOperation, O.Output == Input {
-        self.passDataBlock = { [weak self] in
-            if outputOperation.isCancelled {
+        self.passDataBlock = { [weak self, weak outputOperation] in
+            if outputOperation!.isCancelled {
                 self?.cancel()
-            } else if outputOperation.errors.count > 0 && executeOnlyWhenSuccessful {
-                self?.finish(outputOperation.errors)
+            } else if outputOperation!.errors.count > 0 && executeOnlyWhenSuccessful {
+                self?.finish(outputOperation!.errors)
             }
-            return outputOperation.outputValue
+            return outputOperation!.outputValue
         }
         self.addDependency(outputOperation)
         return self

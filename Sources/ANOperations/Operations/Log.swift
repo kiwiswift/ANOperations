@@ -12,6 +12,7 @@ class Log {
         case enqueuing
         case deinitialising
         case finishedWithError
+        case cancelled
         
         var description: String {
             switch self {
@@ -25,6 +26,7 @@ class Log {
                 case .ready                 : return "ready"
                 case .pending               : return "pending"
                 }
+            case .cancelled                 : return "Cancelled"
             case .enqueuing                 : return "Enqueueing"
             case .deinitialising            : return "Deinitialising"
             case .finishedWithError         : return "Failed"
@@ -43,10 +45,27 @@ class Log {
                 case .ready                 : return "🎬"
                 case .pending               : return "⌛️"
                 }
+            case .cancelled                 : return "❌"
             case .enqueuing                 : return "📥"
             case .deinitialising            : return "👻"
             case .finishedWithError         : return "🛑"
             }
+        }
+        
+        var finished: Bool {
+            switch self {
+            case .finishedWithError,
+                 .cancelled:
+                return true
+            case .state(let state):
+                switch state {
+                case .finished:
+                    return true
+                default: return false
+                }
+            default: return false
+            }
+            
         }
     }
     
@@ -54,7 +73,7 @@ class Log {
     
     static func write(name: String, stage: Stage, errors: [Error]?) {
         var message = "\(name) \(stage.description)"
-        if let errors = errors, errors.count > 0 {
+        if let errors = errors, errors.count > 0, stage.finished {
             let errorDescriptions = errors.map{ String(describing: $0) }.joined(separator: "\n")
             message += " with \(errors.count) errors : \(errorDescriptions)"
             print("[ANOperation] \(Log.Stage.finishedWithError.symbol) " + message)

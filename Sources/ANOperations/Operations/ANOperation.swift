@@ -320,9 +320,11 @@ open class ANOperation: Operation {
         stateAccess.lock()
         defer { stateAccess.unlock() }
         guard !isFinished else { return }
-
+        
         _cancelled = true
-
+        
+        self.log(stage: .cancelled)
+        
         if state > .ready {
             finish()
         }
@@ -459,6 +461,16 @@ public extension ANOperation {
     }
     
     @discardableResult
+    func onSuccess(executeBlock block: @escaping () -> Void) -> Self {
+        let observer = BlockObserver { op, errors in
+            guard errors.count == 0,  !op.isCancelled else { return }
+            block()
+        }
+        self.addObserver(observer)
+        return self
+    }
+    
+    @discardableResult
     func onFailure(executeBlock block: @escaping ([Error]) -> Void) -> Self {
         let observer = BlockObserver { _, errors in
             guard errors.count > 0 else { return }
@@ -470,8 +482,9 @@ public extension ANOperation {
     
     @discardableResult
     func onCompletion(executeBlock block: @escaping ([Error]?) -> Void) -> Self {
-        let observer = BlockObserver { [weak self] _, errors in
-            block(self?.errors)
+        let observer = BlockObserver { op, errors in
+            guard !op.isCancelled else { return }
+            block(errors.count > 0 ? errors : nil)
         }
         self.addObserver(observer)
         return self
