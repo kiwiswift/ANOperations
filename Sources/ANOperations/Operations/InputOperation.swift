@@ -90,7 +90,7 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
         super.didEnqueue(in: queue)
     }
     
-    
+    @discardableResult
     public func injectingValue(_ value: Input) -> Self {
         let injector = InjectorOperation(value: value)
         self.sourceOperations.append(injector)
