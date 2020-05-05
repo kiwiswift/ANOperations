@@ -12,7 +12,7 @@ import Foundation
  `TimeoutObserver` is a way to make an `ANOperation` automatically time out and
  cancel after a specified time interval.
  */
-public final class TimeoutObserver: OperationObserver {
+public final class TimeoutObserver: OperationStartObserver {
     // MARK: Properties
 
     private let timeout: TimeInterval
@@ -39,17 +39,5 @@ public final class TimeoutObserver: OperationObserver {
                 operation.cancelWithError(error)
             }
         }
-    }
-
-    public func operationDidCancel(_ operation: ANOperation) {
-        // No op.
-    }
-
-    public func operation(_ operation: ANOperation, didProduceOperation newOperation: Operation) {
-        // No op.
-    }
-
-    public func operationDidFinish(_ operation: ANOperation, errors: [Error]) {
-        // No op.
     }
 }
