@@ -396,11 +396,9 @@ open class ANOperation: Operation {
         }
 
         state = .finished
-        let when = DispatchTime.now() + 10
+        let when = DispatchTime.now() + 30
         DispatchQueue.global(qos: .init(qos: self.qualityOfService)).asyncAfter(deadline: when) { [weak self] in
-            if self?.isFinished ?? false {
-                self?.log(stage: .notDeinitialised)
-            }
+            self?.log(stage: .notDeinitialised)
         }
     }
 
