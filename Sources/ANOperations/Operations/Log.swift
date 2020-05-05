@@ -5,14 +5,18 @@
 //  Created by Christiano Gontijo on 23/02/20.
 //
 
+import Foundation
+
 class Log {
     
     enum Stage {
         case state(State)
         case enqueuing
+        case injecting(from: String)
         case deinitialising
         case finishedWithError
         case cancelled
+        case notDeinitialised
         
         var description: String {
             switch self {
@@ -28,8 +32,10 @@ class Log {
                 }
             case .cancelled                 : return "Cancelled"
             case .enqueuing                 : return "Enqueueing"
+            case .injecting(let operation)  : return "Injecting from \(operation)"
             case .deinitialising            : return "Deinitialising"
             case .finishedWithError         : return "Failed"
+            case .notDeinitialised          : return "Retained In Memory"
             }
         }
         
@@ -49,6 +55,8 @@ class Log {
             case .enqueuing                 : return "📥"
             case .deinitialising            : return "👻"
             case .finishedWithError         : return "🛑"
+            case .injecting                 : return "🔗"
+            case .notDeinitialised          : return "💦"
             }
         }
         
@@ -65,14 +73,34 @@ class Log {
                 }
             default: return false
             }
-            
         }
     }
     
     static var active: Bool = false
     
-    static func write(name: String, stage: Stage, errors: [Error]?) {
-        var message = "\(name) \(stage.description)"
+    /*static let queue = DispatchQueue(label: "com.kiwiswift.ANOperations.Log", attributes: .concurrent)
+    static var _activeOperations: [Int:Stage] = [:]
+    static var activeOperations: [Int:Stage] {
+        get { queue.sync { _activeOperations } }
+        set { queue.sync { _activeOperations = newValue } }
+    }*/
+    
+    static func write(name: String, hashValue: Int, stage: Stage, errors: [Error]?) {
+        
+        let identifier = "\(hashValue)-\(name)"//.padding(toLength: 100, withPad: " ", startingAt: 0)
+        var message = "\(identifier) \(stage.description)"
+        /*self.activeOperations[hashValue] = stage
+        switch stage {
+        case .state(let state):
+            if case State.initialized = state {
+//                self.activeOperations[hashValue] =
+            }
+        default:
+            if case Stage.deinitialising = stage {
+                self.activeOperations.removeValue(forKey: hashValue)
+                message += " (\(self.activeOperations.count ) on heap)"
+            }
+        }*/
         if let errors = errors, errors.count > 0, stage.finished {
             let errorDescriptions = errors.map{ String(describing: $0) }.joined(separator: "\n")
             message += " with \(errors.count) errors : \(errorDescriptions)"
@@ -94,13 +122,15 @@ extension ANOperation {
     
     func log(stage: Log.Stage) {
         guard log else { return }
-        Log.write(name: self.name ?? "Operation", stage: stage, errors: self.errors)
+        let text = "\(name ?? "Operation")"
+        Log.write(name: text, hashValue: self.hash, stage: stage, errors: self.errors)
     }
     
     func log(state: State) {
         guard log else { return }
         let stage = Log.Stage.state(state)
-        Log.write(name: self.name ?? "Operation", stage: stage, errors: self.errors)
+        let text = "\(name ?? "Operation")"
+        Log.write(name: text, hashValue: self.hash, stage: stage, errors: self.errors)
     }
     
 }

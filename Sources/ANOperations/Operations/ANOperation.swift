@@ -396,6 +396,12 @@ open class ANOperation: Operation {
         }
 
         state = .finished
+        let when = DispatchTime.now() + 10
+        DispatchQueue.global(qos: .init(qos: self.qualityOfService)).asyncAfter(deadline: when) { [weak self] in
+            if self?.isFinished ?? false {
+                self?.log(stage: .notDeinitialised)
+            }
+        }
     }
 
     /**
@@ -454,8 +460,8 @@ public extension ANOperation {
     }
 
     @discardableResult
-    func onCancel(executeBlock block: @escaping () -> Void) -> Self {
-        let observer = BlockObserver(cancelHandler: { _ in block() } )
+    func onCancel(executeBlock block: @escaping ([Error]) -> Void) -> Self {
+        let observer = BlockObserver(cancelHandler: { op in block(op.errors) } )
         self.addObserver(observer)
         return self
     }

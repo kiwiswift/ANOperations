@@ -67,10 +67,11 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     @discardableResult
     public func injectValue<O>(from outputOperation: O, executeOnlyWhenSuccessful: Bool) -> Self where O: OutputOperation, O.Output == Input {
         self.passDataBlock = { [weak self, weak outputOperation] in
+            self!.log(stage: .injecting(from: outputOperation!.name ?? String(describing: outputOperation!)))
             if outputOperation!.isCancelled {
-                self?.cancel()
+                self!.cancel()
             } else if outputOperation!.errors.count > 0 && executeOnlyWhenSuccessful {
-                self?.finish(outputOperation!.errors)
+                self!.finish(outputOperation!.errors)
             }
             return outputOperation!.outputValue
         }
