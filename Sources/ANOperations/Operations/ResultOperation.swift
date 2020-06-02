@@ -12,7 +12,7 @@ open class ResultOperation<Output>: ANOperation, OutputOperation {
     // MARK: Transformation Dependencies
     internal var sourceOperations: [ANOperation] = []
     
-    public typealias TransformationBlock = () -> Result<Output, Error>
+    public typealias TransformationBlock = () -> Result<Output, Error>?
     
     private let block: TransformationBlock
     
@@ -22,7 +22,7 @@ open class ResultOperation<Output>: ANOperation, OutputOperation {
     }
     
     public override func execute() {
-        let outputValue = block()
+        guard let outputValue = block() else { return self.cancel() }
         self.finish(with: outputValue)
     }
     

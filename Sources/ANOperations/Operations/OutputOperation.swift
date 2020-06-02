@@ -62,6 +62,7 @@ public extension OutputOperation {
     
     func map<I, O>(_ transform: @escaping (I) -> O) -> ResultOperation<O> where I == Self.Output {
         let resultOperation = ResultOperation<O> { [weak self] in
+            guard !(self?.isCancelled ?? false) else { return nil }
             guard let outputValue = self?.outputValue.get() else {
                 if let error = self?.errors.first {
                     return .failure(error)
