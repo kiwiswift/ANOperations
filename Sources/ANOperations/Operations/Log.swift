@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 class Log {
     
@@ -101,13 +102,21 @@ class Log {
                 message += " (\(self.activeOperations.count ) on heap)"
             }
         }*/
+        
+        var symbol: String
+        var logType: OSLogType
         if let errors = errors, errors.count > 0, stage.finished {
             let errorDescriptions = errors.map{ String(describing: $0) }.joined(separator: "\n")
             message += " with \(errors.count) errors : \(errorDescriptions)"
-            print("[ANOperation] \(Log.Stage.finishedWithError.symbol) " + message)
+            symbol = Log.Stage.finishedWithError.symbol
+            logType = .error
         } else {
-            print("[ANOperation] \(stage.symbol) " + message)
+            symbol = stage.symbol
+            logType = .debug
         }
+        let logString = "[ANOperation] \(symbol) - \(message)"
+        let logObj = OSLog(subsystem: "com.kiwiswift.anoperations", category: name)
+        os_log("%{public}@", log: logObj, type: logType, logString )
     }
     
     
