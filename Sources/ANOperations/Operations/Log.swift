@@ -116,7 +116,8 @@ class Log {
         }
         let logString = "[ANOperation] \(symbol) - \(message)"
         let logObj = OSLog(subsystem: "com.kiwiswift.anoperations", category: name)
-        os_log("%{public}@", log: logObj, type: logType, logString )
+//        os_log("%{public}@", log: logObj, type: logType, logString )
+        debugPrint(logString)
     }
     
     
