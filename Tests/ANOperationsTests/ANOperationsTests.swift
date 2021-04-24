@@ -242,6 +242,55 @@ final class ANOperationsTests: XCTestCase {
         waitForExpectations(timeout: 5.0, handler: nil)
     }
     
+    func test_GroupOperations_WhenOneOperationFails() {
+        class FailOperation: ANOperation {
+            override func execute() {
+                self.finishWithError(NSError())
+            }
+        }
+        class CancelOperation: ANOperation {
+            override func execute() {
+                self.cancel()
+            }
+        }
+        let exp1 = expectation(description: "block1")
+        let exp2 = expectation(description: "block2")
+        let exp3 = expectation(description: "block3")
+        let exp4 = expectation(description: "block4")
+        let exp5 = expectation(description: "block5")
+        let op2 = FailOperation(name: "FailOperation")
+            .onSuccess { XCTFail("Not expected to reach this point") }
+            .onFailure { _ in exp2.fulfill() }
+            .onCancel { _ in XCTFail("Not expected to reach this point") }
+        let op3 = CancelOperation(name: "op1")
+            .onSuccess { XCTFail("Not expected to reach this point") }
+            .onFailure { _ in XCTFail("Not expected to reach this point") }
+            .onCancel { _ in exp3.fulfill() }
+        let op1 = ANOperation(name: "op1")
+            .onSuccess { exp1.fulfill() }
+            .onFailure { _ in XCTFail("Not expected to reach this point") }
+            .onCancel { _ in XCTFail("Not expected to reach this point") }
+            .dependingOn(op2)
+        let op4 = ANOperation(name: "op1")
+            .onSuccess { exp4.fulfill() }
+            .onFailure { _ in XCTFail("Not expected to reach this point") }
+            .onCancel { _ in XCTFail("Not expected to reach this point") }
+            .dependingOn(op3)
+        
+        let groupOp = GroupOperation(operations: [op2, op3, op4, op1])
+            .onCompletion { errors in
+                XCTAssertEqual(errors?.count, 1)
+                XCTAssertEqual(op2.errors.count, 1)
+                exp5.fulfill()
+            }
+        
+        let opQ = ANOperationQueue()
+        
+        opQ.addOperation(groupOp)
+        
+        waitForExpectations(timeout: 10.0, handler: nil)
+    }
+    
     func testGroupOperation_cancelBeforeExecuting() {
         let exp1 = expectation(description: "block1")
         let exp2 = expectation(description: "block2")
