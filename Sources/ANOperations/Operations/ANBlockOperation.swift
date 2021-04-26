@@ -24,9 +24,9 @@ public final class ANBlockOperation: ANOperation {
          will never finish executing. If this parameter is `nil`, the operation
          will immediately finish.
      */
-    public init(block: OperationBlock? = nil) {
+    public init(name: String = "BlockOperation", block: OperationBlock? = nil) {
         self.block = block
-        super.init(name: "BlockOperation")
+        super.init(name: name)
     }
 
     /**
@@ -37,8 +37,8 @@ public final class ANBlockOperation: ANOperation {
          the designated initializer). The operation will be automatically ended
          after the `mainQueueBlock` is executed.
      */
-    public convenience init(mainQueueBlock: @escaping () -> Void) {
-        self.init(block: { continuation in
+    public convenience init(name: String = "BlockOperation", mainQueueBlock: @escaping () -> Void) {
+        self.init(name: name, block: { continuation in
             DispatchQueue.main.async {
                 mainQueueBlock()
                 continuation()

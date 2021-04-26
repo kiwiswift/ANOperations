@@ -93,7 +93,8 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     
     @discardableResult
     public func injectingValue(_ value: Input) -> Self {
-        let injector = InjectorOperation(value: value)
+        let name = "\(self.name ?? "") injector of \(type(of: value))"
+        let injector = InjectorOperation(name: name, value: value)
         self.sourceOperations.append(injector)
         self.injectValue(from: injector, executeOnlyWhenSuccessful: false)
         return self

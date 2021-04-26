@@ -61,6 +61,22 @@ class Log {
             }
         }
         
+        @available(iOS 12.0, *)
+        var signpost: OSSignpostType? {
+            switch self {
+            case let .state(state):
+                switch state {
+                case .initialized:  return .begin
+                case .executing:    return .event
+                default:            return nil
+                }
+            case .finishedWithError:return .event
+            case .cancelled:        return .event
+            case .deinitialising:   return .end
+            default: return nil
+            }
+        }
+        
         var finished: Bool {
             switch self {
             case .finishedWithError,
@@ -117,6 +133,12 @@ class Log {
         let logString = "[ANOperation] \(symbol) - \(message)"
         let logObj = OSLog(subsystem: "com.kiwiswift.anoperations", category: name)
         #if DEBUG
+        if #available(iOS 12.0, *) {
+            if let signpost = stage.signpost {
+                let signpostId = OSSignpostID(.init(hashValue))
+                os_signpost(signpost, log: logObj, name: "ANOperation", signpostID: signpostId, "%@ - %@", name, stage.description)
+            }
+        }
         debugPrint(logString)
         #else
         os_log("%{public}@", log: logObj, type: logType, logString )
