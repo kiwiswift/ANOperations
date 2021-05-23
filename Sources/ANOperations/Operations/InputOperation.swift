@@ -33,12 +33,21 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     
     private var passDataBlock: PassDataBlock?
     
+    private let block: ((Input) -> Void)?
+    
     public init<O>(name: String, outputOperation: O, executeOnlyWhenSuccessful: Bool) where O: OutputOperation, O.Output == Input {
+        self.block = nil
         super.init(name: name)
         self.injectValue(from: outputOperation, executeOnlyWhenSuccessful: executeOnlyWhenSuccessful)
     }
     
     public override init(name: String) {
+        self.block = nil
+        super.init(name: name)
+    }
+    
+    public init(name: String, block: @escaping (Input) -> Void) {
+        self.block = block
         super.init(name: name)
     }
     
@@ -60,8 +69,13 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     }
     
     open func execute(with value: Input) {
-        print("\(self.name ?? String(describing: self)) Needs Implementation")
-        finish()
+        guard let block = block else {
+            print("\(self.name ?? String(describing: self)) Needs Implementation")
+            finish()
+            return
+        }
+        block(value)
+        self.finish()
     }
     
     @discardableResult
@@ -74,6 +88,21 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
                 self!.finish(outputOperation!.errors)
             }
             return outputOperation!.outputValue
+        }
+        self.addDependency(outputOperation)
+        return self
+    }
+    
+    @discardableResult
+    public func injectValue<O>(from outputOperation: O) -> Self where O: OutputOperation, Input == Optional<O.Output> {
+        self.passDataBlock = { [weak self, weak outputOperation] in
+            self!.log(stage: .injecting(from: outputOperation!.name ?? String(describing: outputOperation!)))
+            if outputOperation!.isCancelled {
+                self!.cancel()
+            } else if outputOperation!.errors.count > 0 {
+                return .ready(nil)
+            }
+            return .ready(outputOperation!.outputValue.get())
         }
         self.addDependency(outputOperation)
         return self
