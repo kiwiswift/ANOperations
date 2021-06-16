@@ -61,6 +61,7 @@ class Log {
             }
         }
         
+        @available(macOS 10.14, *)
         @available(iOS 12.0, *)
         var signpost: OSSignpostType? {
             switch self {
@@ -133,7 +134,7 @@ class Log {
         let logString = "[ANOperation] \(symbol) - \(message)"
         let logObj = OSLog(subsystem: "com.kiwiswift.anoperations", category: name)
         #if DEBUG
-        if #available(iOS 12.0, *) {
+        if #available(iOS 12.0, macOS 10.14, *)  {
             if let signpost = stage.signpost {
                 let signpostId = OSSignpostID(.init(hashValue))
                 os_signpost(signpost, log: logObj, name: "ANOperation", signpostID: signpostId, "%@ - %@", name, stage.description)
