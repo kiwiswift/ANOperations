@@ -59,6 +59,12 @@ private func verifyAccountStatus(_ container: CKContainer,
             completion(error ?? CKError(.managedAccountRestricted))
         case .noAccount:
             completion(error ?? CKError(.notAuthenticated))
+        case .temporarilyUnavailable:
+            if #available(iOS 15.0, *) {
+                completion(error ?? CKError(.accountTemporarilyUnavailable))
+            } else {
+                completion(error ?? CKError(.internalError))
+            }
         @unknown default:
             fatalError("Unhandled account status")
         }
