@@ -8,8 +8,7 @@
 import CloudKit
 import Foundation
 
-public struct OperationError: Error {
-    public enum Reason {
+public enum OperationError: LocalizedError {
         case conditionNotMet(condition: String)
         case negatedConditionFailed(notCondition: String)
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
@@ -18,50 +17,32 @@ public struct OperationError: Error {
         case outputValueNotSet
         case dependenciesFailed([Error])
         case timedOut(timeout: TimeInterval)
-    }
 
-    public let reason: Reason
-    
-    public static func conditionNotMet(condition: String) -> OperationError {
-        return OperationError(.conditionNotMet(condition: condition))
-    }
-
-    public static func negatedConditionFailed(notCondition: String) -> OperationError {
-        return OperationError(.negatedConditionFailed(notCondition: notCondition))
-    }
-
-    public static func noCancelledDependenciesConditionFailed(cancelled: [Operation]) -> OperationError {
-        return OperationError(.noCancelledDependenciesConditionFailed(cancelled: cancelled))
-    }
-
-    public static func reachabilityConditionFailed(host: URL) -> OperationError {
-        return OperationError(.reachabilityConditionFailed(host: host))
-    }
-
-    public static func timedOut(timeout: TimeInterval) -> OperationError {
-        return OperationError(.timedOut(timeout: timeout))
-    }
-    
-    public static func dependenciesFailed(with errors: [Error]) -> OperationError {
-        return OperationError(.dependenciesFailed(errors))
-    }
-    
-    public static func inputValueNotSet() -> OperationError {
-        return OperationError(.inputValueNotSet)
-    }
-    
-    public static func outputValueNotSet() -> OperationError {
-        return OperationError(.outputValueNotSet)
-    }
-
-    public init(_ reason: Reason) {
-        self.reason = reason
+    public var errorDescription: String? {
+        switch self {
+        case .conditionNotMet(condition: let condition):
+            return "Condition \(condition) not met"
+        case .negatedConditionFailed(notCondition: let condition):
+            return "Negated Condition \(condition) not met"
+        case .noCancelledDependenciesConditionFailed(cancelled: let operations):
+            return "No Cancelled Dependencies Conditions failed - Operations \(operations.map { $0.name ?? $0.description }.joined(separator: ","))"
+        case .reachabilityConditionFailed(host: let url):
+            return "Url \(url.absoluteString) not reacheable"
+        case .inputValueNotSet:
+            return "Input Value not set"
+        case .outputValueNotSet:
+            return "Output Value not set"
+        case .dependenciesFailed(let errors):
+            return "Dependencies failed: \(errors.map { $0.localizedDescription }.joined(separator: ","))"
+        case .timedOut(timeout: let timeInterval):
+            return "Timeout: (\(timeInterval))"
+        }
     }
 }
 
 extension OperationError: Equatable {
     public static func == (lhs: OperationError, rhs: OperationError) -> Bool {
-        switch (lhs.reason, rhs.reason) {
+        switch (lhs, rhs) {
         case let (.negatedConditionFailed(lhs), .negatedConditionFailed(rhs)):
             return lhs == rhs
         case let (.noCancelledDependenciesConditionFailed(lhs), .noCancelledDependenciesConditionFailed(rhs)):

@@ -54,7 +54,7 @@ open class InputOperation<Input>: ANOperation, InputOperationProtocol {
     override open func execute() {
         guard let inputValue = self.getInputValue() else {
             guard !self.isFinished else { return } //The operation might have already been finished with dependency errors after passDataBlock is executed
-            self.finishWithError(OperationError(.inputValueNotSet))
+            self.finishWithError(OperationError.inputValueNotSet)
             return
         }
         self.execute(with: inputValue)
