@@ -24,7 +24,7 @@ extension CKContainer {
      operation fails. If the verification was successful, this value will
      be `nil`.
      */
-    public func verify(_ permission: CKContainer.Application.Permissions = [],
+    public func verify(_ permission: CKContainer.ApplicationPermissions = [],
                        request shouldRequest: Bool = false,
                        completion: @escaping (Error?) -> Void) {
         verifyAccountStatus(self, permission: permission, shouldRequest: shouldRequest, completion: completion)
@@ -36,7 +36,7 @@ extension CKContainer {
  `CKContainer`.
  */
 private func verifyAccountStatus(_ container: CKContainer,
-                                 permission: CKContainer.Application.Permissions,
+                                 permission: CKContainer.ApplicationPermissions,
                                  shouldRequest: Bool,
                                  completion: @escaping (Error?) -> Void) {
     container.accountStatus { accountStatus, error in
@@ -72,7 +72,7 @@ private func verifyAccountStatus(_ container: CKContainer,
 }
 
 private func verifyPermission(_ container: CKContainer,
-                              permission: CKContainer.Application.Permissions,
+                              permission: CKContainer.ApplicationPermissions,
                               shouldRequest: Bool,
                               completion: @escaping (Error?) -> Void) {
     container.status(forApplicationPermission: permission) { permissionStatus, error in
@@ -89,7 +89,7 @@ private func verifyPermission(_ container: CKContainer,
 }
 
 private func requestPermission(_ container: CKContainer,
-                               permission: CKContainer.Application.Permissions,
+                               permission: CKContainer.ApplicationPermissions,
                                completion: @escaping (Error?) -> Void) {
     DispatchQueue.main.async {
         container.requestApplicationPermission(permission) { requestStatus, error in

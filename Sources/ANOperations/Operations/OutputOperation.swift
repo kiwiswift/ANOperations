@@ -81,43 +81,43 @@ public extension OutputOperation {
     }
     
     func bindOutput<O: OutputOperation>(toResultOf outputOperation: O) where O.Output == Self.Output {
-        let observer = BlockObserver { [weak self] (operation, errors) in
+        let observer = BlockObserver(finishHandler:  { [weak self] (operation, errors) in
             guard let strongSelf = self else { fatalError() }
             strongSelf.outputValue = outputOperation.outputValue
             strongSelf.finish()
-        }
+        })
         self.addObserver(observer)
     }
     
     
     @discardableResult
     func onSuccess(executeBlock block: @escaping (Output) -> Void) -> Self {
-        let observer = BlockObserver { [weak self] _, errors in
+        let observer = BlockObserver(finishHandler:  { [weak self] _, errors in
             if let value = self?.outputValue.get() {
                 block(value)
             }
-        }
+        })
         self.addObserver(observer)
         return self
     }
 
     @discardableResult
     func onCompletion(executeBlock block: @escaping (Output?, [Error]?) -> Void) -> Self {
-        let observer = BlockObserver { operation, errors in
+        let observer = BlockObserver(finishHandler:  { operation, errors in
             guard let operation = operation as? Self, !operation.isCancelled else { return }
             let errorsCount = errors.count
             block(operation.outputValue.get(), errorsCount > 0 ? errors : nil)
-        }
+        })
         self.addObserver(observer)
         return self
     }
     
     @discardableResult
     func bindResultTo(block: @escaping (Result<Output,Error>) -> Void) -> Self {
-        let observer = BlockObserver { [weak self] _, _ in
+        let observer = BlockObserver(finishHandler:  { [weak self] _, _ in
             guard let strongSelf = self else { return }
             block(strongSelf.result)
-        }
+        })
         self.addObserver(observer)
         return self
     }

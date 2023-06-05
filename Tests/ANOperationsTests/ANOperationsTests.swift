@@ -988,7 +988,7 @@ final class ANOperationsTests: XCTestCase {
      */
     func testOperationQueueNotGettingStuck() {
         var opCount = 0
-        var requiredToPassCount = 5000
+        let requiredToPassCount = 5000
         let q = ANOperationQueue()
         
         let exp = expectation(description: "requiredToPassCount")

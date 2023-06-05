@@ -29,7 +29,7 @@ open class ANOperation: Operation {
      BlockObserver executes in an expected manner.
      */
     @available(*, deprecated, message: "use BlockObserver completions instead")
-    open override var completionBlock: (() -> Void)? {
+    open override var completionBlock: (@Sendable () -> Void)? {
         // swiftlint:disable unused_setter_value
         set {
             fatalError("The completionBlock property on NSOperation has unexpected behavior and is not supported")
@@ -466,30 +466,30 @@ public extension ANOperation {
     
     @discardableResult
     func onSuccess(executeBlock block: @escaping () -> Void) -> Self {
-        let observer = BlockObserver { op, errors in
+        let observer = BlockObserver(finishHandler:  { op, errors in
             guard errors.count == 0,  !op.isCancelled else { return }
             block()
-        }
+        })
         self.addObserver(observer)
         return self
     }
     
     @discardableResult
     func onFailure(executeBlock block: @escaping ([Error]) -> Void) -> Self {
-        let observer = BlockObserver { _, errors in
+        let observer = BlockObserver(finishHandler:  { _, errors in
             guard errors.count > 0 else { return }
             block(errors)
-        }
+        })
         self.addObserver(observer)
         return self
     }
     
     @discardableResult
     func onCompletion(executeBlock block: @escaping ([Error]?) -> Void) -> Self {
-        let observer = BlockObserver { op, errors in
+        let observer = BlockObserver(finishHandler:  { op, errors in
             guard !op.isCancelled else { return }
             block(errors.count > 0 ? errors : nil)
-        }
+        })
         self.addObserver(observer)
         return self
     }

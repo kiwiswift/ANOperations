@@ -19,7 +19,7 @@ public struct CloudContainerCondition: OperationCondition {
      */
     public static let isMutuallyExclusive = false
 
-    public let permission: CKContainer.Application.Permissions
+    public let permission: CKContainer.ApplicationPermissions
 
     // this is the container to which you need access.
     private let container: CKContainer
@@ -30,7 +30,7 @@ public struct CloudContainerCondition: OperationCondition {
      container. This parameter has a default value of `[]`, which would get
      you anonymized read/write access.
      */
-    public init(container: CKContainer, permission: CKContainer.Application.Permissions = []) {
+    public init(container: CKContainer, permission: CKContainer.ApplicationPermissions = []) {
         self.container = container
         self.permission = permission
     }
@@ -57,9 +57,9 @@ public struct CloudContainerCondition: OperationCondition {
  */
 private class CloudKitPermissionOperation: ANOperation {
     let container: CKContainer
-    let permission: CKContainer.Application.Permissions
+    let permission: CKContainer.ApplicationPermissions
 
-    init(container: CKContainer, permission: CKContainer.Application.Permissions) {
+    init(container: CKContainer, permission: CKContainer.ApplicationPermissions) {
         self.container = container
         self.permission = permission
         super.init(name: "CloudKitPermissionOperation")

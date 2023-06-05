@@ -82,9 +82,9 @@ open class ANOperationQueue: OperationQueue {
 
                 exclusivityController.addOperation(operation, categories: concurrencyCategories)
 
-                operation.addObserver(BlockObserver { operation, _ in
+                operation.addObserver(BlockObserver(finishHandler:  { operation, _ in
                     exclusivityController.removeOperation(operation, categories: concurrencyCategories)
-                })
+                }))
             }
         }
         else {
