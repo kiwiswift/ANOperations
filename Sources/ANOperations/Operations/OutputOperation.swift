@@ -67,7 +67,7 @@ public extension OutputOperation {
                 if let error = self?.errors.first {
                     return .failure(error)
                 } else {
-                    return .failure(OperationError.inputValueNotSet)
+                    return .failure(OperationError.inputValueNotSet(operationName: self?.name ?? "OutputOperation"))
                 }
             }
             let returnValue = transform(outputValue)

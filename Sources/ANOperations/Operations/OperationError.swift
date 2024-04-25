@@ -13,7 +13,7 @@ public enum OperationError: LocalizedError {
         case negatedConditionFailed(notCondition: String)
         case noCancelledDependenciesConditionFailed(cancelled: [Operation])
         case reachabilityConditionFailed(host: URL)
-        case inputValueNotSet
+        case inputValueNotSet(operationName: String)
         case outputValueNotSet
         case dependenciesFailed([Error])
         case timedOut(timeout: TimeInterval)
@@ -28,8 +28,8 @@ public enum OperationError: LocalizedError {
             return "No Cancelled Dependencies Conditions failed - Operations \(operations.map { $0.name ?? $0.description }.joined(separator: ","))"
         case .reachabilityConditionFailed(host: let url):
             return "Url \(url.absoluteString) not reacheable"
-        case .inputValueNotSet:
-            return "Input Value not set"
+        case .inputValueNotSet(let name):
+            return "Input Value not set - operation: \(name)"
         case .outputValueNotSet:
             return "Output Value not set"
         case .dependenciesFailed(let errors):
