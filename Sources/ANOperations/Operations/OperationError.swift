@@ -9,14 +9,15 @@ import CloudKit
 import Foundation
 
 public enum OperationError: LocalizedError {
-        case conditionNotMet(condition: String)
-        case negatedConditionFailed(notCondition: String)
-        case noCancelledDependenciesConditionFailed(cancelled: [Operation])
-        case reachabilityConditionFailed(host: URL)
-        case inputValueNotSet(operationName: String)
-        case outputValueNotSet
-        case dependenciesFailed([Error])
-        case timedOut(timeout: TimeInterval)
+    case conditionNotMet(condition: String)
+    case negatedConditionFailed(notCondition: String)
+    case noCancelledDependenciesConditionFailed(cancelled: [Operation])
+    case reachabilityConditionFailed(host: URL)
+    case inputValueNotSet(operationName: String)
+    case outputValueNotSet
+    case dependenciesFailed([Error])
+    case timedOut(timeout: TimeInterval)
+    case tryingToRunFinishedOperation(operationName: String)
 
     public var errorDescription: String? {
         switch self {
@@ -30,6 +31,8 @@ public enum OperationError: LocalizedError {
             return "Url \(url.absoluteString) not reacheable"
         case .inputValueNotSet(let name):
             return "Input Value not set - operation: \(name)"
+        case .tryingToRunFinishedOperation(let name):
+            return "Trying to run a finished operation: \(name)"
         case .outputValueNotSet:
             return "Output Value not set"
         case .dependenciesFailed(let errors):
